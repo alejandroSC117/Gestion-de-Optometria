@@ -14,6 +14,8 @@ import {
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { ClinicProvider } from '@/context/ClinicContext';
+import { AuthProvider } from '@/context/AuthContext';
+import { SubscriptionProvider } from '@/context/SubscriptionContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -22,8 +24,14 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerBackTitle: 'Back' }}>
+    <Stack screenOptions={{ headerBackTitle: 'Atrás', headerShown: false }}>
+      <Stack.Screen name="welcome" options={{ headerShown: false }} />
+      <Stack.Screen name="auth" options={{ presentation: 'modal', headerShown: false }} />
+      <Stack.Screen name="plans" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="calculators" options={{ headerShown: false }} />
+      <Stack.Screen name="nexus-ai" options={{ headerShown: false }} />
+      <Stack.Screen name="settings" options={{ headerShown: false }} />
     </Stack>
   );
 }
@@ -48,13 +56,17 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <ClinicProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <KeyboardProvider>
-                <RootLayoutNav />
-              </KeyboardProvider>
-            </GestureHandlerRootView>
-          </ClinicProvider>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <ClinicProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <KeyboardProvider>
+                    <RootLayoutNav />
+                  </KeyboardProvider>
+                </GestureHandlerRootView>
+              </ClinicProvider>
+            </SubscriptionProvider>
+          </AuthProvider>
         </QueryClientProvider>
       </ErrorBoundary>
     </SafeAreaProvider>

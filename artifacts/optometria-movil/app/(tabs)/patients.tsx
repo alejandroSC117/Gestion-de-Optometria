@@ -4,17 +4,23 @@ import { Feather } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useClinic } from '@/context/ClinicContext';
-import { EmptyState, PatientRow, Screen, TopBar } from '@/components/NexusUI';
+import { EmptyState, PatientRow, Screen, TopBar, UpgradeCard } from '@/components/NexusUI';
+import { useSubscription } from '@/context/SubscriptionContext';
 
 export default function PatientsScreen() {
   const router = useRouter();
   const colors = useColors();
   const { patients } = useClinic();
+  const { canAccess } = useSubscription();
   const [search, setSearch] = useState('');
   const filteredPatients = useMemo(() => {
     const normalized = search.trim().toLowerCase();
     return patients.filter((patient) => `${patient.firstName} ${patient.lastName} ${patient.phone}`.toLowerCase().includes(normalized));
   }, [patients, search]);
+
+  if (!canAccess('patientHistory')) {
+    return <Screen><TopBar eyebrow="Expedientes" title="Pacientes" /><UpgradeCard title="Historial de pacientes es Pro" message="Actualiza a Nexus Pro para crear expedientes, guardar exámenes y consultar la evolución clínica." onPress={() => router.push('/plans')} /></Screen>;
+  }
 
   return (
     <Screen>

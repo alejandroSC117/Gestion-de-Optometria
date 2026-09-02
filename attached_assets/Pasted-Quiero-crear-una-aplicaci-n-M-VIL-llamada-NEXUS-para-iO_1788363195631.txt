@@ -1,0 +1,253 @@
+Quiero crear una aplicación MÓVIL llamada NEXUS para iOS y Android, orientada exclusivamente al área de OPTOMETRÍA.
+
+No quiero una página web. Quiero una aplicación móvil utilizando React Native + Expo, con una arquitectura modular y preparada para crecer.
+
+IMPORTANTE:
+Antes de desarrollar las funciones clínicas, crea toda la estructura de navegación, autenticación, suscripciones y límites de uso.
+
+ESTRUCTURA DE LA APP:
+
+1. PANTALLA DE BIENVENIDA
+- Logo de NEXUS.
+- Nombre: NEXUS
+- Subtítulo: "Asistente inteligente para optometría"
+- Botón "Crear cuenta"
+- Botón "Iniciar sesión"
+- Diseño profesional, moderno y limpio.
+- Adaptada para teléfonos.
+
+2. CREAR CUENTA
+Permitir registro mediante:
+- Nombre
+- Correo electrónico
+- Contraseña
+- Confirmación de contraseña
+
+Agregar casilla:
+"Acepto los términos y condiciones y el aviso de privacidad."
+
+Botón "Crear cuenta".
+
+3. INICIAR SESIÓN
+Campos:
+- Correo electrónico
+- Contraseña
+
+Opciones:
+- "Iniciar sesión"
+- "¿Olvidaste tu contraseña?"
+- "Crear una cuenta"
+
+4. PANTALLA DE PLANES Y SUSCRIPCIÓN
+
+Crear tres planes:
+
+NEXUS FREE
+- Acceso limitado a las calculadoras básicas.
+- Límite mensual de operaciones.
+- Acceso limitado al asistente Nexus.
+- Sin historial avanzado.
+- Mostrar claramente qué funciones están bloqueadas.
+
+NEXUS PRO
+- Acceso completo a las calculadoras.
+- Exámenes visuales guiados.
+- Historial de pacientes.
+- Recetas.
+- Asistente Nexus.
+- Mayor límite de uso.
+- Funciones profesionales.
+
+NEXUS CLINIC
+- Todo lo incluido en PRO.
+- Múltiples usuarios.
+- Gestión de una óptica o consultorio.
+- Mayor capacidad de pacientes.
+- Funciones administrativas.
+- Preparado para futuras funciones empresariales.
+
+Mostrar los precios como variables configurables, NO poner precios definitivos todavía.
+
+Agregar botones:
+"Continuar con Free"
+"Elegir Pro"
+"Elegir Clinic"
+
+La arquitectura debe permitir integrar posteriormente pagos reales mediante App Store / Google Play o un proveedor de pagos compatible.
+
+5. CONTROL DE SUSCRIPCIÓN
+
+Crear un sistema que identifique:
+- Usuario Free
+- Usuario Pro
+- Usuario Clinic
+
+Las funciones premium deben estar protegidas.
+
+Si un usuario Free intenta acceder a una función premium:
+mostrar una pantalla explicando qué función está bloqueada y ofrecer actualizar su plan.
+
+6. LÍMITES DE LA VERSIÓN FREE
+
+Crear un sistema configurable para limitar el número de operaciones.
+
+Ejemplo:
+- Transposición de cilindro: límite mensual configurable.
+- Calculadoras: límite mensual configurable.
+- Asistente Nexus: límite mensual configurable.
+
+NO fijar estos límites de manera permanente. Crear una configuración central para poder modificarlos posteriormente.
+
+Mostrar al usuario:
+"Has utilizado X de Y operaciones este mes."
+
+Cuando llegue al límite:
+"Has alcanzado el límite de tu plan gratuito. Actualiza a Nexus Pro para continuar."
+
+7. PANTALLA PRINCIPAL
+
+Después de iniciar sesión, mostrar:
+
+NEXUS
+"Asistente inteligente para optometría"
+
+Tarjetas grandes:
+
+👁️ NUEVO EXAMEN
+🧮 CALCULADORAS
+📋 RECETAS
+👤 PACIENTES
+🧠 NEXUS AI
+⚙️ AJUSTES
+
+Mostrar también:
+- Nombre del usuario.
+- Plan actual.
+- Uso mensual.
+- Acceso rápido a "Nuevo examen".
+
+8. MÓDULO NUEVO EXAMEN
+
+Crear una estructura preparada para guiar al optometrista paso a paso.
+
+Secciones futuras:
+
+- Datos del paciente.
+- Agudeza visual.
+- Refracción objetiva.
+- Refracción subjetiva.
+- Esfera.
+- Cilindro.
+- Eje.
+- Adición.
+- Balance binocular.
+- Pruebas complementarias.
+- Resultado final.
+- Generación de receta.
+
+Por ahora crear la navegación y las pantallas base, pero no inventar protocolos clínicos. Las pruebas y procedimientos clínicos se agregarán posteriormente.
+
+9. MÓDULO CALCULADORAS
+
+Crear una pantalla con categorías:
+
+REFRACCIÓN
+- Transposición de cilindro positivo ↔ negativo.
+- Equivalente esférico.
+- Conversión de recetas.
+
+ÓPTICA
+- Distancia de vértice.
+- Prismas.
+- Cálculos ópticos.
+
+AGUDEZA VISUAL
+- Conversión de escalas de agudeza visual.
+
+Cada calculadora debe tener su propia pantalla y estar preparada para recibir fórmulas posteriormente.
+
+10. MÓDULO RECETAS
+
+Crear:
+- Nueva receta.
+- Visualización de receta.
+- Historial de recetas.
+- Preparar generación futura de PDF.
+
+11. MÓDULO PACIENTES
+
+Crear:
+- Lista de pacientes.
+- Buscar paciente.
+- Crear paciente.
+- Perfil del paciente.
+- Historial de exámenes.
+
+La estructura debe estar preparada para una base de datos segura posteriormente.
+
+12. NEXUS AI
+
+Crear una pantalla de asistente llamada "Nexus AI".
+
+Debe permitir escribir preguntas relacionadas exclusivamente con optometría.
+
+Diseñar la interfaz como un chat.
+
+IMPORTANTE:
+Nexus AI será una herramienta de apoyo profesional y no debe presentarse como sustituto del criterio de un optometrista.
+
+13. AJUSTES
+
+Incluir:
+- Perfil.
+- Plan y suscripción.
+- Uso mensual.
+- Notificaciones.
+- Privacidad.
+- Términos y condiciones.
+- Cerrar sesión.
+
+14. DISEÑO
+
+Usar una interfaz moderna, profesional y minimalista.
+
+Preferencias:
+- Fondo claro.
+- Azul como color principal.
+- Tarjetas limpias.
+- Iconos sencillos.
+- Tipografía moderna.
+- Botones grandes y fáciles de utilizar en teléfono.
+- Diseño responsive para diferentes tamaños de pantalla.
+
+NEXUS debe sentirse como un software profesional de optometría, no como una calculadora genérica.
+
+15. ARQUITECTURA
+
+Organizar el proyecto de manera modular.
+
+Separar:
+- navegación
+- autenticación
+- pantallas
+- componentes
+- calculadoras
+- suscripciones
+- límites de uso
+- servicios
+- almacenamiento
+- configuración
+
+No colocar todo el código en un solo archivo.
+
+Crear datos y configuraciones temporales/mock cuando todavía no exista backend.
+
+IMPORTANTE:
+Primero quiero que construyas esta estructura completa y funcional de navegación y las interfaces.
+
+NO implementes todavía pagos reales, inteligencia artificial real ni protocolos clínicos definitivos.
+
+Deja esas partes preparadas para integrarlas posteriormente.
+
+Al finalizar, quiero poder ejecutar la aplicación y navegar entre:
+Bienvenida → Registro/Login → Planes → Inicio → Nuevo examen → Calculadoras → Recetas → Pacientes → Nexus AI → Ajustes.

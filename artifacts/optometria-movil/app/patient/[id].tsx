@@ -4,17 +4,23 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { useClinic } from '@/context/ClinicContext';
-import { EmptyState, PatientAvatar, PrimaryButton, Screen, SectionHeading, StatusPill, TopBar, formatDate } from '@/components/NexusUI';
+import { EmptyState, PatientAvatar, PrimaryButton, Screen, SectionHeading, StatusPill, TopBar, UpgradeCard, formatDate } from '@/components/NexusUI';
+import { useSubscription } from '@/context/SubscriptionContext';
 
 export default function PatientDetailScreen() {
   const router = useRouter();
   const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getPatient, getPatientAppointments, getPatientPrescription, getPatientExams } = useClinic();
+  const { canAccess } = useSubscription();
   const patient = getPatient(Number(id));
   const appointments = useMemo(() => patient ? getPatientAppointments(patient.id) : [], [getPatientAppointments, patient]);
   const exams = useMemo(() => patient ? getPatientExams(patient.id) : [], [getPatientExams, patient]);
   const prescription = patient ? getPatientPrescription(patient.id) : undefined;
+
+  if (!canAccess('patientHistory')) {
+    return <Screen><TopBar eyebrow="Expediente" title="Detalle" action={{ icon: 'x', label: 'Cerrar', onPress: () => router.back() }} /><UpgradeCard title="Historial avanzado es Pro" message="Actualiza a Nexus Pro para consultar perfiles, exámenes y recetas de tus pacientes." onPress={() => router.push('/plans')} /></Screen>;
+  }
 
   if (!patient) {
     return <Screen><TopBar title="Paciente" action={{ icon: 'x', label: 'Cerrar', onPress: () => router.back() }} /><EmptyState icon="user-x" title="Expediente no encontrado" message="Este paciente ya no está disponible." /></Screen>;

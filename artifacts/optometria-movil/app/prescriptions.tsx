@@ -4,13 +4,19 @@ import { Feather } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useClinic } from '@/context/ClinicContext';
-import { EmptyState, PatientAvatar, Screen, TopBar, formatDate } from '@/components/NexusUI';
+import { EmptyState, PatientAvatar, Screen, TopBar, UpgradeCard, formatDate } from '@/components/NexusUI';
+import { useSubscription } from '@/context/SubscriptionContext';
 
 export default function PrescriptionsScreen() {
   const router = useRouter();
   const colors = useColors();
   const { patients, prescriptions } = useClinic();
+  const { canAccess } = useSubscription();
   const records = useMemo(() => prescriptions.map((prescription) => ({ prescription, patient: patients.find((patient) => patient.id === prescription.patientId) })).filter((record) => record.patient), [patients, prescriptions]);
+
+  if (!canAccess('prescriptions')) {
+    return <Screen><TopBar eyebrow="Historial clínico" title="Recetas" /><UpgradeCard title="Recetas profesionales son Pro" message="Actualiza a Nexus Pro para guardar graduaciones, consultarlas y mantener el historial de tus pacientes." onPress={() => router.push('/plans')} /></Screen>;
+  }
 
   return (
     <Screen>

@@ -3,12 +3,14 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, Text } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useClinic } from '@/context/ClinicContext';
-import { Field, PrimaryButton, Screen, TopBar } from '@/components/NexusUI';
+import { Field, PrimaryButton, Screen, TopBar, UpgradeCard } from '@/components/NexusUI';
+import { useSubscription } from '@/context/SubscriptionContext';
 
 export default function NewPatientScreen() {
   const router = useRouter();
   const colors = useColors();
   const { addPatient } = useClinic();
+  const { canAccess } = useSubscription();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -24,6 +26,10 @@ export default function NewPatientScreen() {
     }
     const created = addPatient({ firstName: firstName.trim(), lastName: lastName.trim(), phone: phone.trim(), email: email.trim(), birthDate: birthDate.trim(), notes: notes.trim() });
     router.replace({ pathname: '/patient/[id]', params: { id: String(created.id) } });
+  }
+
+  if (!canAccess('patientHistory')) {
+    return <Screen><TopBar eyebrow="Expediente" title="Nuevo paciente" action={{ icon: 'x', label: 'Cerrar', onPress: () => router.back() }} /><UpgradeCard title="Crea pacientes con Nexus Pro" message="El historial de pacientes es una función profesional. Elige Nexus Pro para comenzar a registrar expedientes." onPress={() => router.push('/plans')} /></Screen>;
   }
 
   return (

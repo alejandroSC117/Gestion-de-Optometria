@@ -12,6 +12,8 @@ import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import type { Patient } from '@/context/ClinicContext';
+import type { PlanId, UsageFeature } from '@/config/subscription';
+import { PLAN_DEFINITIONS } from '@/config/subscription';
 
 type FeatherName = React.ComponentProps<typeof Feather>['name'];
 
@@ -187,6 +189,8 @@ export function Field({
   placeholder,
   keyboardType = 'default',
   multiline = false,
+  secureTextEntry = false,
+  autoCapitalize = 'sentences',
 }: {
   label: string;
   value: string;
@@ -194,6 +198,8 @@ export function Field({
   placeholder?: string;
   keyboardType?: 'default' | 'phone-pad' | 'email-address' | 'numeric';
   multiline?: boolean;
+  secureTextEntry?: boolean;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
 }) {
   const colors = useColors();
   return (
@@ -206,6 +212,8 @@ export function Field({
         placeholderTextColor={colors.mutedForeground}
         keyboardType={keyboardType}
         multiline={multiline}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize={autoCapitalize}
         textAlignVertical={multiline ? 'top' : 'center'}
         style={[
           styles.field,
@@ -234,6 +242,57 @@ export function PrimaryButton({ label, icon, onPress, disabled = false }: { labe
       {icon ? <Feather name={icon} size={18} color={colors.primaryForeground} /> : null}
       <Text style={[styles.primaryButtonText, { color: colors.primaryForeground }]}>{label}</Text>
     </Pressable>
+  );
+}
+
+export function SecondaryButton({ label, icon, onPress }: { label: string; icon?: FeatherName; onPress: () => void }) {
+  const colors = useColors();
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.secondaryButton, { borderColor: colors.border, backgroundColor: colors.card }, pressed && styles.buttonPressed]}>
+      {icon ? <Feather name={icon} size={17} color={colors.primary} /> : null}
+      <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+export function CheckRow({ label, checked, onPress }: { label: string; checked: boolean; onPress: () => void }) {
+  const colors = useColors();
+  return (
+    <Pressable onPress={onPress} style={styles.checkRow}>
+      <View style={[styles.checkbox, { borderColor: checked ? colors.primary : colors.border, backgroundColor: checked ? colors.primary : colors.card }]}>
+        {checked ? <Feather name="check" size={13} color={colors.primaryForeground} /> : null}
+      </View>
+      <Text style={[styles.checkLabel, { color: colors.mutedForeground }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+export function PlanBadge({ plan }: { plan: PlanId }) {
+  const colors = useColors();
+  return <View style={[styles.planBadge, { backgroundColor: colors.accent }]}><Text style={[styles.planBadgeText, { color: colors.primary }]}>{PLAN_DEFINITIONS[plan].name}</Text></View>;
+}
+
+export function UsageProgress({ feature, used, limit }: { feature: UsageFeature; used: number; limit: number }) {
+  const colors = useColors();
+  const percentage = Math.min(100, (used / Math.max(limit, 1)) * 100);
+  const labels: Record<UsageFeature, string> = { transposition: 'Transposición', calculator: 'Calculadoras', assistant: 'Nexus AI' };
+  return (
+    <View style={styles.usageProgress}>
+      <View style={styles.usageHeader}><Text style={[styles.usageLabel, { color: colors.foreground }]}>{labels[feature]}</Text><Text style={[styles.usageCount, { color: colors.mutedForeground }]}>{used} de {limit}</Text></View>
+      <View style={[styles.progressTrack, { backgroundColor: colors.secondary }]}><View style={[styles.progressFill, { width: `${percentage}%`, backgroundColor: colors.primary }]} /></View>
+    </View>
+  );
+}
+
+export function UpgradeCard({ title, message, onPress }: { title: string; message: string; onPress: () => void }) {
+  const colors = useColors();
+  return (
+    <View style={[styles.upgradeCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+      <View style={[styles.upgradeIcon, { backgroundColor: colors.card }]}><Feather name="lock" size={18} color={colors.primary} /></View>
+      <Text style={[styles.upgradeTitle, { color: colors.foreground }]}>{title}</Text>
+      <Text style={[styles.upgradeMessage, { color: colors.mutedForeground }]}>{message}</Text>
+      <PrimaryButton label="Ver planes" icon="arrow-up-right" onPress={onPress} />
+    </View>
   );
 }
 
@@ -295,8 +354,25 @@ export const styles = StyleSheet.create({
   fieldMultiline: { minHeight: 104, paddingTop: 13 },
   primaryButton: { minHeight: 52, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 18 },
   primaryButtonText: { fontSize: 15, fontWeight: '700' },
+  secondaryButton: { minHeight: 50, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 18 },
+  secondaryButtonText: { fontSize: 15, fontWeight: '700' },
   buttonPressed: { opacity: 0.82, transform: [{ scale: 0.985 }] },
   buttonDisabled: { opacity: 0.45 },
+  checkRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 18 },
+  checkbox: { width: 21, height: 21, borderRadius: 6, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  checkLabel: { flex: 1, fontSize: 12, lineHeight: 18 },
+  planBadge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6, alignSelf: 'flex-start' },
+  planBadgeText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.6 },
+  usageProgress: { marginTop: 14 },
+  usageHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 7 },
+  usageLabel: { fontSize: 12, fontWeight: '600' },
+  usageCount: { fontSize: 11 },
+  progressTrack: { height: 7, borderRadius: 4, overflow: 'hidden' },
+  progressFill: { height: 7, borderRadius: 4 },
+  upgradeCard: { borderRadius: 20, borderWidth: 1, padding: 19, marginTop: 8 },
+  upgradeIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  upgradeTitle: { fontSize: 17, fontWeight: '700' },
+  upgradeMessage: { fontSize: 13, lineHeight: 19, marginTop: 5, marginBottom: 17 },
   emptyState: { borderWidth: 1, borderRadius: 18, alignItems: 'center', padding: 28, marginTop: 10 },
   emptyIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 13 },
   emptyTitle: { fontSize: 15, fontWeight: '700' },

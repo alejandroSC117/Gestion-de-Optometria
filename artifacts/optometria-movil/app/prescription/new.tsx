@@ -3,12 +3,14 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useClinic } from '@/context/ClinicContext';
-import { Field, PatientAvatar, PrimaryButton, Screen, TopBar } from '@/components/NexusUI';
+import { Field, PatientAvatar, PrimaryButton, Screen, TopBar, UpgradeCard } from '@/components/NexusUI';
+import { useSubscription } from '@/context/SubscriptionContext';
 
 export default function NewPrescriptionScreen() {
   const router = useRouter();
   const colors = useColors();
   const { patients, addPrescription } = useClinic();
+  const { canAccess } = useSubscription();
   const [patientId, setPatientId] = useState(patients[0]?.id ?? 0);
   const [odSphere, setOdSphere] = useState('0.00');
   const [odCylinder, setOdCylinder] = useState('0.00');
@@ -23,6 +25,10 @@ export default function NewPrescriptionScreen() {
     if (!patientId) return;
     addPrescription({ patientId, issuedDate: '2026-09-02', odSphere: Number(odSphere) || 0, odCylinder: Number(odCylinder) || 0, odAxis: Number(odAxis) || 0, osSphere: Number(osSphere) || 0, osCylinder: Number(osCylinder) || 0, osAxis: Number(osAxis) || 0, addPower: Number(addPower) || 0, lensType });
     router.back();
+  }
+
+  if (!canAccess('prescriptions')) {
+    return <Screen><TopBar eyebrow="Historia clínica" title="Nueva receta" action={{ icon: 'x', label: 'Cerrar', onPress: () => router.back() }} /><UpgradeCard title="Recetas profesionales son Pro" message="Actualiza a Nexus Pro para registrar y consultar graduaciones desde Nexus." onPress={() => router.push('/plans')} /></Screen>;
   }
 
   return (

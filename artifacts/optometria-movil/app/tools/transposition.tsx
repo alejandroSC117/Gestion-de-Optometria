@@ -4,14 +4,17 @@ import { Feather } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Field, PrimaryButton, Screen, TopBar } from '@/components/NexusUI';
+import { useSubscription } from '@/context/SubscriptionContext';
 
 export default function TranspositionScreen() {
   const router = useRouter();
   const colors = useColors();
+  const { consume } = useSubscription();
   const [sphere, setSphere] = useState('-1.25');
   const [cylinder, setCylinder] = useState('-0.50');
   const [axis, setAxis] = useState('90');
   const [result, setResult] = useState<{ sphere: string; cylinder: string; axis: number } | null>(null);
+  const [limitMessage, setLimitMessage] = useState('');
 
   function calculate() {
     const s = Number(sphere);
@@ -21,6 +24,12 @@ export default function TranspositionScreen() {
       setResult(null);
       return;
     }
+    if (!consume('transposition')) {
+      setLimitMessage('Has alcanzado el límite de tu plan gratuito. Actualiza a Nexus Pro para continuar.');
+      setResult(null);
+      return;
+    }
+    setLimitMessage('');
     setResult({ sphere: (s + c).toFixed(2), cylinder: (-c).toFixed(2), axis: a === 0 ? 90 : a > 90 ? a - 90 : a + 90 });
   }
 
@@ -37,6 +46,7 @@ export default function TranspositionScreen() {
         <Field label="Cilindro (D)" value={cylinder} onChangeText={setCylinder} placeholder="-0.50" keyboardType="numeric" />
         <Field label="Eje (°)" value={axis} onChangeText={setAxis} placeholder="90" keyboardType="numeric" />
         <PrimaryButton label="Calcular transposición" icon="arrow-right" onPress={calculate} />
+        {limitMessage ? <Text style={[styles.limitMessage, { color: colors.destructive }]}>{limitMessage}</Text> : null}
       </View>
       {result ? (
         <View style={[styles.resultCard, { backgroundColor: colors.primary }]}>
@@ -75,4 +85,5 @@ const styles = StyleSheet.create({
   resultNote: { color: '#DDEEFF', fontSize: 11, marginTop: 18, lineHeight: 16 },
   tipCard: { borderRadius: 16, padding: 15, flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 14 },
   tipText: { flex: 1, fontSize: 12, lineHeight: 18 },
+  limitMessage: { fontSize: 12, lineHeight: 18, marginTop: 12 },
 });

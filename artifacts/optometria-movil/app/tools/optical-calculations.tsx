@@ -8,15 +8,23 @@ import { Field, PrimaryButton, Screen, TopBar } from '@/components/NexusUI';
 export default function OpticalCalculationsScreen() {
   const router = useRouter();
   const colors = useColors();
+  const { consume } = useSubscription();
   const [mode, setMode] = useState<'vertex' | 'near'>('vertex');
   const [power, setPower] = useState('-8.00');
   const [distance, setDistance] = useState('12');
   const [result, setResult] = useState<string | null>(null);
+  const [limitMessage, setLimitMessage] = useState('');
 
   function calculate() {
     const p = Number(power);
     const d = Number(distance);
     if (Number.isNaN(p) || Number.isNaN(d)) return setResult(null);
+    if (!consume('calculator')) {
+      setLimitMessage('Has alcanzado el límite de tu plan gratuito. Actualiza a Nexus Pro para continuar.');
+      setResult(null);
+      return;
+    }
+    setLimitMessage('');
     setResult(mode === 'vertex' ? `${(p / (1 - (d / 1000) * p)).toFixed(2)} D` : `${(p - d / 100).toFixed(2)} mm`);
   }
 
@@ -33,6 +41,7 @@ export default function OpticalCalculationsScreen() {
         <Field label={mode === 'vertex' ? 'Potencia de la lente (D)' : 'Distancia pupilar (mm)'} value={power} onChangeText={setPower} placeholder="-8.00" keyboardType="numeric" />
         <Field label={mode === 'vertex' ? 'Distancia original (mm)' : 'Distancia de trabajo (cm)'} value={distance} onChangeText={setDistance} placeholder="12" keyboardType="numeric" />
         <PrimaryButton label="Calcular" icon="bar-chart-2" onPress={calculate} />
+        {limitMessage ? <Text style={[styles.limitMessage, { color: colors.destructive }]}>{limitMessage}</Text> : null}
       </View>
       {result ? <View style={[styles.result, { backgroundColor: colors.primary }]}><Text style={styles.resultLabel}>RESULTADO</Text><Text style={styles.resultValue}>{result}</Text><Text style={styles.resultHint}>Resultado orientativo para apoyar tu valoración clínica.</Text></View> : null}
     </Screen>
@@ -52,4 +61,5 @@ const styles = StyleSheet.create({
   resultLabel: { color: '#A8D6FF', fontSize: 10, fontWeight: '700', letterSpacing: 1.4 },
   resultValue: { color: '#FFFFFF', fontSize: 30, fontWeight: '700', marginTop: 8 },
   resultHint: { color: '#DDEEFF', fontSize: 11, lineHeight: 16, marginTop: 12 },
+  limitMessage: { fontSize: 12, lineHeight: 18, marginTop: 12 },
 });
