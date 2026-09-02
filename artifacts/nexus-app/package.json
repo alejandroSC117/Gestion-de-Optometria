@@ -1,0 +1,68 @@
+{
+  "name": "@workspace/nexus-app",
+  "version": "0.0.0",
+  "description": "NEXUS - Professional optometry mobile application",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "expo start",
+    "dev": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "build:android": "eas build --platform android",
+    "build:ios": "eas build --platform ios",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "expo": "^52.0.0",
+    "expo-router": "^4.0.0",
+    "expo-constants": "^16.0.0",
+    "expo-status-bar": "~1.13.0",
+    "react": "19.1.0",
+    "react-native": "0.76.0",
+    "@react-navigation/native": "^6.1.0",
+    "@react-navigation/bottom-tabs": "^6.5.0",
+    "@react-navigation/native-stack": "^6.9.0",
+    "react-native-gesture-handler": "~2.21.0",
+    "react-native-reanimated": "~3.15.0",
+    "react-native-safe-area-context": "4.13.2",
+    "react-native-screens": "~4.4.0",
+    "nativewind": "^2.0.11",
+    "@supabase/supabase-js": "^2.38.0",
+    "@tanstack/react-query": "^5.90.21",
+    "zustand": "^4.4.0",
+    "zod": "^3.25.76",
+    "axios": "^1.6.0",
+    "date-fns": "^3.0.0",
+    "lucide-react-native": "^0.263.1"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-native": "^0.76.0",
+    "typescript": "catalog:",
+    "tailwindcss": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "expo-dev-client": "^3.7.0",
+    "expo-build-properties": "^0.12.0"
+  },
+  "expo": {
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 24
+          },
+          "ios": {
+            "deploymentTarget": "13.4"
+          }
+        }
+      ]
+    ]
+  }
+}

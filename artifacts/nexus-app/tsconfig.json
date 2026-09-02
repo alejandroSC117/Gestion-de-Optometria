@@ -1,0 +1,43 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "noEmit": true,
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@screens/*": ["./src/screens/*"],
+      "@services/*": ["./src/services/*"],
+      "@store/*": ["./src/store/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@config/*": ["./src/config/*"],
+      "@calculators/*": ["./src/modules/calculators/*"],
+      "@patients/*": ["./src/modules/patients/*"],
+      "@clinical/*": ["./src/modules/clinical-history/*"],
+      "@prescriptions/*": ["./src/modules/prescriptions/*"],
+      "@ai/*": ["./src/modules/ai/*"],
+      "@support/*": ["./src/modules/support/*"],
+      "@auth/*": ["./src/modules/auth/*"],
+      "@subscriptions/*": ["./src/modules/subscriptions/*"],
+      "@types/*": ["./src/types/*"]
+    }
+  },
+  "include": ["src", "index.js"],
+  "exclude": ["node_modules", "dist"]
+}
