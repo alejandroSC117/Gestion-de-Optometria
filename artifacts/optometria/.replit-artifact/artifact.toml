@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Óptica Clara"
+description = "Aplicación web para gestionar una consulta de optometría: pacientes, citas, expedientes visuales y graduaciones en un solo lugar."
+version = "1.0.0"
+id = "artifacts/optometria"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21521
+
+[services.development]
+run = "pnpm --filter @workspace/optometria run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/optometria", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/optometria/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21521"
+BASE_PATH = "/"

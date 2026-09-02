@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/mobile/"
+title = "Óptica Clara Móvil"
+description = "Aplicación móvil para que profesionales de optometría consulten pacientes, gestionen citas y revisen exámenes visuales y graduaciones desde el teléfono."
+version = "1.0.0"
+id = "artifacts/optometria-movil"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/mobile/" ]
+localPort = 25337
+
+[services.development]
+run = "pnpm --filter @workspace/optometria-movil run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/optometria-movil", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/optometria-movil", "run", "serve" ]
+
+[services.env]
+PORT = "25337"
+BASE_PATH = "/mobile/"
