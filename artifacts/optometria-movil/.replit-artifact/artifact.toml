@@ -1,6 +1,6 @@
 kind = "mobile"
 previewPath = "/mobile/"
-title = "Óptica Clara Móvil"
+title = "Nexus"
 description = "Aplicación móvil para que profesionales de optometría consulten pacientes, gestionen citas y revisen exámenes visuales y graduaciones desde el teléfono."
 version = "1.0.0"
 id = "artifacts/optometria-movil"
