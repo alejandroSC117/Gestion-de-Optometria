@@ -5,12 +5,14 @@ import { useColors } from '@/hooks/useColors';
 import { useClinic } from '@/context/ClinicContext';
 import { Field, PatientAvatar, PrimaryButton, Screen, TopBar, UpgradeCard } from '@/components/NexusUI';
 import { useSubscription } from '@/context/SubscriptionContext';
+import { useProfessionalProfile } from '@/context/ProfessionalProfileContext';
 
 export default function NewPrescriptionScreen() {
   const router = useRouter();
   const colors = useColors();
   const { patients, addPrescription } = useClinic();
   const { canAccess } = useSubscription();
+  const { profile } = useProfessionalProfile();
   const [patientId, setPatientId] = useState(patients[0]?.id ?? 0);
   const [odSphere, setOdSphere] = useState('0.00');
   const [odCylinder, setOdCylinder] = useState('0.00');
@@ -19,11 +21,47 @@ export default function NewPrescriptionScreen() {
   const [osCylinder, setOsCylinder] = useState('0.00');
   const [osAxis, setOsAxis] = useState('0');
   const [addPower, setAddPower] = useState('0.00');
+  const [odAdd, setOdAdd] = useState('0.00');
+  const [odPrism, setOdPrism] = useState('');
+  const [osAdd, setOsAdd] = useState('0.00');
+  const [osPrism, setOsPrism] = useState('');
+  const [dp, setDp] = useState('');
+  const [height, setHeight] = useState('');
+  const [observations, setObservations] = useState('');
   const [lensType, setLensType] = useState('Monofocal antirreflejante');
 
   function save() {
     if (!patientId) return;
-    addPrescription({ patientId, issuedDate: '2026-09-02', odSphere: Number(odSphere) || 0, odCylinder: Number(odCylinder) || 0, odAxis: Number(odAxis) || 0, osSphere: Number(osSphere) || 0, osCylinder: Number(osCylinder) || 0, osAxis: Number(osAxis) || 0, addPower: Number(addPower) || 0, lensType });
+    addPrescription({
+      patientId,
+      issuedDate: new Date().toISOString().slice(0, 10),
+      odSphere: Number(odSphere) || 0,
+      odCylinder: Number(odCylinder) || 0,
+      odAxis: Number(odAxis) || 0,
+      osSphere: Number(osSphere) || 0,
+      osCylinder: Number(osCylinder) || 0,
+      osAxis: Number(osAxis) || 0,
+      addPower: Number(addPower) || 0,
+      odAdd: Number(odAdd) || 0,
+      odPrism,
+      osAdd: Number(osAdd) || 0,
+      osPrism,
+      dp,
+      height,
+      observations,
+      lensType,
+      provider: {
+        displayName: profile.prescriptionName || `${profile.firstName} ${profile.lastName}`.trim(),
+        professionalName: profile.prescriptionProfessionalName || profile.profession,
+        licenseNumber: profile.prescriptionLicense || profile.licenseNumber,
+        officeName: profile.officeName,
+        address: profile.prescriptionAddress || profile.officeAddress,
+        phone: profile.prescriptionPhone || profile.officePhone,
+        email: profile.prescriptionEmail || profile.officeEmail || profile.email,
+        logoUri: profile.logoUri,
+        signatureUri: profile.signatureUri,
+      },
+    });
     router.back();
   }
 
@@ -43,8 +81,13 @@ export default function NewPrescriptionScreen() {
         <View style={styles.rowTitle}><Text style={[styles.rxTitle, { color: colors.foreground }]}>OI · Izquierdo</Text><Text style={[styles.unit, { color: colors.mutedForeground }]}>dioptrías</Text></View>
         <View style={styles.threeColumns}><View style={styles.column}><Field label="Esfera" value={osSphere} onChangeText={setOsSphere} keyboardType="numeric" /></View><View style={styles.column}><Field label="Cilindro" value={osCylinder} onChangeText={setOsCylinder} keyboardType="numeric" /></View><View style={styles.axisColumn}><Field label="Eje" value={osAxis} onChangeText={setOsAxis} keyboardType="numeric" /></View></View>
       </View>
-      <Field label="Adición" value={addPower} onChangeText={setAddPower} keyboardType="numeric" placeholder="0.00" />
+       <Field label="Adición general" value={addPower} onChangeText={setAddPower} keyboardType="numeric" placeholder="0.00" />
+       <View style={styles.threeColumns}><View style={styles.column}><Field label="Adición OD" value={odAdd} onChangeText={setOdAdd} keyboardType="numeric" placeholder="0.00" /></View><View style={styles.column}><Field label="Prisma OD" value={odPrism} onChangeText={setOdPrism} placeholder="Opcional" /></View></View>
+       <View style={styles.threeColumns}><View style={styles.column}><Field label="Adición OI" value={osAdd} onChangeText={setOsAdd} keyboardType="numeric" placeholder="0.00" /></View><View style={styles.column}><Field label="Prisma OI" value={osPrism} onChangeText={setOsPrism} placeholder="Opcional" /></View></View>
+       <View style={styles.threeColumns}><View style={styles.column}><Field label="DP" value={dp} onChangeText={setDp} placeholder="Opcional" /></View><View style={styles.column}><Field label="Altura" value={height} onChangeText={setHeight} placeholder="Opcional" /></View></View>
       <Field label="Tipo de lente" value={lensType} onChangeText={setLensType} placeholder="Monofocal antirreflejante" />
+       <Field label="Observaciones" value={observations} onChangeText={setObservations} placeholder="Indicaciones para la receta..." multiline />
+       <Text style={[styles.profileHint, { color: colors.mutedForeground }]}>Los datos del profesional se tomarán automáticamente de Mi perfil profesional. El PDF y la firma digital quedan preparados para una siguiente fase.</Text>
       <PrimaryButton label="Guardar receta" icon="check" onPress={save} disabled={!patientId} />
     </Screen>
   );

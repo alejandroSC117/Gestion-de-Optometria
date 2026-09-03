@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { AppFeature, PLAN_DEFINITIONS, PlanId, UsageFeature, planAllows } from '@/config/subscription';
 
-type UsageState = { month: string; transposition: number; calculator: number; assistant: number };
+type UsageState = { month: string; transposition: number; calculator: number; assistant: number; patients: number; exams: number };
 type SubscriptionContextValue = {
   plan: PlanId;
   usage: UsageState;
@@ -15,7 +15,7 @@ type SubscriptionContextValue = {
 
 const STORAGE_KEY = '@nexus/subscription';
 const currentMonth = new Date().toISOString().slice(0, 7);
-const blankUsage = (): UsageState => ({ month: currentMonth, transposition: 0, calculator: 0, assistant: 0 });
+const blankUsage = (): UsageState => ({ month: currentMonth, transposition: 0, calculator: 0, assistant: 0, patients: 0, exams: 0 });
 const SubscriptionContext = createContext<SubscriptionContextValue | null>(null);
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
@@ -29,7 +29,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         if (!stored) return;
         const parsed = JSON.parse(stored) as { plan?: PlanId; usage?: UsageState };
         if (parsed.plan && PLAN_DEFINITIONS[parsed.plan]) setPlan(parsed.plan);
-        if (parsed.usage?.month === currentMonth) setUsage(parsed.usage);
+        if (parsed.usage?.month === currentMonth) setUsage({ ...blankUsage(), ...parsed.usage });
       })
       .catch(() => undefined)
       .finally(() => setIsLoading(false));

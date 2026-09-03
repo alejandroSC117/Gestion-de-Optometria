@@ -13,9 +13,11 @@ export default function NewPatientScreen() {
   const { canAccess } = useSubscription();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [sex, setSex] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
 
@@ -24,7 +26,7 @@ export default function NewPatientScreen() {
       setError('Escribe el nombre y apellido para continuar.');
       return;
     }
-    const created = addPatient({ firstName: firstName.trim(), lastName: lastName.trim(), phone: phone.trim(), email: email.trim(), birthDate: birthDate.trim(), notes: notes.trim() });
+    const created = addPatient({ firstName: firstName.trim(), lastName: lastName.trim(), sex: sex.trim(), phone: phone.trim(), email: email.trim(), birthDate: birthDate.trim(), address: address.trim(), notes: notes.trim() });
     router.replace({ pathname: '/patient/[id]', params: { id: String(created.id) } });
   }
 
@@ -38,9 +40,11 @@ export default function NewPatientScreen() {
       <Text style={[styles.intro, { color: colors.mutedForeground }]}>Registra los datos básicos para comenzar su historial visual.</Text>
       <Field label="Nombre" value={firstName} onChangeText={setFirstName} placeholder="Ej. Valentina" />
       <Field label="Apellido" value={lastName} onChangeText={setLastName} placeholder="Ej. Ríos" />
+      <Field label="Sexo (opcional)" value={sex} onChangeText={setSex} placeholder="Solo cuando sea necesario" />
       <Field label="Teléfono" value={phone} onChangeText={setPhone} placeholder="+52 55 0000 0000" keyboardType="phone-pad" />
       <Field label="Correo electrónico" value={email} onChangeText={setEmail} placeholder="paciente@email.com" keyboardType="email-address" />
       <Field label="Fecha de nacimiento" value={birthDate} onChangeText={setBirthDate} placeholder="DD/MM/AAAA" />
+      <Field label="Dirección (opcional)" value={address} onChangeText={setAddress} placeholder="Dirección del paciente" multiline />
       <Field label="Notas clínicas" value={notes} onChangeText={setNotes} placeholder="Alergias, preferencias o antecedentes..." multiline />
       {error ? <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text> : null}
       <PrimaryButton label="Crear expediente" icon="user-plus" onPress={save} />

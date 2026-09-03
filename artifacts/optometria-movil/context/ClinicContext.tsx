@@ -5,9 +5,11 @@ export type Patient = {
   id: number;
   firstName: string;
   lastName: string;
+  sex?: string;
   phone: string;
   email: string;
   birthDate: string;
+  address?: string;
   notes: string;
   status: 'active' | 'inactive';
   createdAt: string;
@@ -34,7 +36,25 @@ export type Prescription = {
   osCylinder: number;
   osAxis: number;
   addPower: number;
+  odAdd?: number;
+  odPrism?: string;
+  osAdd?: number;
+  osPrism?: string;
+  dp?: string;
+  height?: string;
+  observations?: string;
   lensType: string;
+  provider?: {
+    displayName: string;
+    professionalName: string;
+    licenseNumber: string;
+    officeName: string;
+    address: string;
+    phone: string;
+    email: string;
+    logoUri?: string;
+    signatureUri?: string;
+  };
 };
 
 export type Exam = {
@@ -48,29 +68,113 @@ export type Exam = {
   observations: string;
 };
 
+export type ClinicalEyeAcuity = {
+  distanceUncorrected: string;
+  distanceCorrected: string;
+  nearUncorrected: string;
+  nearCorrected: string;
+};
+
+export type ClinicalRefractionEye = {
+  sphere: string;
+  cylinder: string;
+  axis: string;
+  add: string;
+  prism: string;
+};
+
+export type ClinicalConsultation = {
+  id: number;
+  date: string;
+  time: string;
+  reason: string;
+  professional: string;
+  observations: string;
+  antecedents: {
+    ocular: string;
+    personal: string;
+    family: string;
+    surgeries: string;
+    glasses: string;
+    contactLenses: string;
+    medications: string;
+    allergies: string;
+  };
+  acuity: {
+    scale: string;
+    od: ClinicalEyeAcuity;
+    oi: ClinicalEyeAcuity;
+    ao: ClinicalEyeAcuity;
+  };
+  refraction: {
+    od: ClinicalRefractionEye;
+    oi: ClinicalRefractionEye;
+    vertexDistance: string;
+    dp: string;
+    observations: string;
+  };
+  tests: {
+    pupils: string;
+    ocularMotility: string;
+    coverTest: string;
+    binocularVision: string;
+    vergences: string;
+    accommodation: string;
+    stereopsis: string;
+    colorVision: string;
+    visualField: string;
+    keratometry: string;
+    tonometry: string;
+    slitLamp: string;
+    other: string;
+  };
+  results: {
+    findings: string;
+    observations: string;
+    professionalAssessment: string;
+    recommendations: string;
+    followUp: string;
+  };
+  prescriptionId?: number;
+};
+
+export type ClinicalHistory = {
+  id: number;
+  patientId: number;
+  consultations: ClinicalConsultation[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 type ClinicState = {
   patients: Patient[];
   appointments: Appointment[];
   prescriptions: Prescription[];
   exams: Exam[];
+  clinicalHistories: ClinicalHistory[];
 };
 
-type NewPatient = Pick<Patient, 'firstName' | 'lastName' | 'phone' | 'email' | 'birthDate' | 'notes'>;
+export type NewPatient = Pick<Patient, 'firstName' | 'lastName' | 'phone' | 'email' | 'birthDate' | 'notes'> & Pick<Patient, 'sex' | 'address'>;
 type NewAppointment = Pick<Appointment, 'patientId' | 'date' | 'time' | 'type' | 'notes'>;
 type NewPrescription = Omit<Prescription, 'id'>;
 type NewExam = Omit<Exam, 'id'>;
+export type NewClinicalConsultation = Omit<ClinicalConsultation, 'id'>;
 
 type ClinicContextValue = ClinicState & {
   isHydrated: boolean;
   addPatient: (patient: NewPatient) => Patient;
+  updatePatient: (id: number, patient: Partial<NewPatient>) => void;
   addAppointment: (appointment: NewAppointment) => Appointment;
   addPrescription: (prescription: NewPrescription) => Prescription;
   addExam: (exam: NewExam) => Exam;
+  addConsultation: (patientId: number, consultation: NewClinicalConsultation) => ClinicalConsultation;
   updateAppointmentStatus: (id: number, status: Appointment['status']) => void;
   getPatient: (id: number) => Patient | undefined;
   getPatientAppointments: (id: number) => Appointment[];
   getPatientPrescription: (id: number) => Prescription | undefined;
   getPatientExams: (id: number) => Exam[];
+  getPatientHistory: (id: number) => ClinicalHistory | undefined;
+  getPatientConsultations: (id: number) => ClinicalConsultation[];
 };
 
 const STORAGE_KEY = '@nexus/clinic-state';
@@ -136,6 +240,7 @@ const initialState: ClinicState = {
     { id: 401, patientId: 101, examDate: '2026-08-12', visualAcuityRight: '20/25', visualAcuityLeft: '20/20', intraocularPressureRight: '15', intraocularPressureLeft: '14', observations: 'Buena respuesta binocular. Continuar con corrección actual.' },
     { id: 402, patientId: 102, examDate: '2026-07-24', visualAcuityRight: '20/30', visualAcuityLeft: '20/25', intraocularPressureRight: '16', intraocularPressureLeft: '16', observations: 'Se recomienda adaptación a progresivos.' },
   ],
+  clinicalHistories: [],
 };
 
 const ClinicContext = createContext<ClinicContextValue | null>(null);
@@ -148,7 +253,8 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((stored) => {
         if (stored) {
-          setState(JSON.parse(stored) as ClinicState);
+          const parsed = JSON.parse(stored) as Partial<ClinicState>;
+          setState({ ...initialState, ...parsed, clinicalHistories: parsed.clinicalHistories ?? [] });
         }
       })
       .catch(() => undefined)
@@ -174,6 +280,12 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
       setState((current) => ({ ...current, patients: [created, ...current.patients] }));
       return created;
     },
+    updatePatient: (id, patient) => {
+      setState((current) => ({
+        ...current,
+        patients: current.patients.map((item) => item.id === id ? { ...item, ...patient } : item),
+      }));
+    },
     addAppointment: (appointment) => {
       const created: Appointment = {
         ...appointment,
@@ -191,6 +303,22 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
     addExam: (exam) => {
       const created: Exam = { ...exam, id: Date.now() };
       setState((current) => ({ ...current, exams: [created, ...current.exams] }));
+      return created;
+    },
+    addConsultation: (patientId, consultation) => {
+      const created: ClinicalConsultation = { ...consultation, id: Date.now() };
+      setState((current) => {
+        const existing = current.clinicalHistories.find((history) => history.patientId === patientId);
+        const history = existing
+          ? { ...existing, consultations: [...existing.consultations, created], updatedAt: new Date().toISOString() }
+          : { id: Date.now() + 1, patientId, consultations: [created], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+        return {
+          ...current,
+          clinicalHistories: existing
+            ? current.clinicalHistories.map((item) => item.patientId === patientId ? history : item)
+            : [history, ...current.clinicalHistories],
+        };
+      });
       return created;
     },
     updateAppointmentStatus: (id, status) => {
@@ -214,6 +342,11 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
       state.exams
         .filter((exam) => exam.patientId === id)
         .sort((a, b) => b.examDate.localeCompare(a.examDate)),
+    getPatientHistory: (id) => state.clinicalHistories.find((history) => history.patientId === id),
+    getPatientConsultations: (id) =>
+      state.clinicalHistories.find((history) => history.patientId === id)?.consultations
+        .slice()
+        .sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`)) ?? [],
   }), [isHydrated, state]);
 
   return <ClinicContext.Provider value={value}>{children}</ClinicContext.Provider>;

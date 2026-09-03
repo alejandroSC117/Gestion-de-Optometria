@@ -16,6 +16,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { ClinicProvider } from '@/context/ClinicContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
+import { ProfessionalProfileProvider } from '@/context/ProfessionalProfileContext';
+import { SupportProvider } from '@/context/SupportContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -32,6 +34,9 @@ function RootLayoutNav() {
       <Stack.Screen name="calculators" options={{ headerShown: false }} />
       <Stack.Screen name="nexus-ai" options={{ headerShown: false }} />
       <Stack.Screen name="settings" options={{ headerShown: false }} />
+      <Stack.Screen name="professional-profile" options={{ headerShown: false }} />
+      <Stack.Screen name="clinical-history" options={{ headerShown: false }} />
+      <Stack.Screen name="support" options={{ headerShown: false }} />
     </Stack>
   );
 }
@@ -58,13 +63,17 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <SubscriptionProvider>
-              <ClinicProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                  <KeyboardProvider>
-                    <RootLayoutNav />
-                  </KeyboardProvider>
-                </GestureHandlerRootView>
-              </ClinicProvider>
+               <ProfessionalProfileProvider>
+                <SupportProvider>
+                  <ClinicProvider>
+                    <GestureHandlerRootView style={{ flex: 1 }}>
+                      <KeyboardProvider>
+                        <RootLayoutNav />
+                      </KeyboardProvider>
+                    </GestureHandlerRootView>
+                  </ClinicProvider>
+                </SupportProvider>
+              </ProfessionalProfileProvider>
             </SubscriptionProvider>
           </AuthProvider>
         </QueryClientProvider>

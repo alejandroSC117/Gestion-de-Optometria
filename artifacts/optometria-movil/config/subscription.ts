@@ -1,5 +1,5 @@
 export type PlanId = 'free' | 'pro' | 'clinic';
-export type UsageFeature = 'transposition' | 'calculator' | 'assistant';
+export type UsageFeature = 'transposition' | 'calculator' | 'assistant' | 'patients' | 'exams';
 export type AppFeature = UsageFeature | 'visualExam' | 'patientHistory' | 'prescriptions';
 
 export type PlanDefinition = {
@@ -15,6 +15,8 @@ export const USAGE_LIMITS: Record<UsageFeature, number> = {
   transposition: 20,
   calculator: 40,
   assistant: 10,
+  patients: 10,
+  exams: 5,
 };
 
 export const PLAN_DEFINITIONS: Record<PlanId, PlanDefinition> = {
@@ -32,7 +34,7 @@ export const PLAN_DEFINITIONS: Record<PlanId, PlanDefinition> = {
     description: 'Herramientas profesionales para tu consulta.',
     priceLabel: 'Precio por configurar',
     features: ['Calculadoras completas', 'Exámenes visuales guiados', 'Pacientes y recetas', 'Asistente Nexus'],
-    limits: { transposition: 9999, calculator: 9999, assistant: 9999 },
+    limits: { transposition: 9999, calculator: 9999, assistant: 9999, patients: 9999, exams: 9999 },
   },
   clinic: {
     id: 'clinic',
@@ -40,7 +42,7 @@ export const PLAN_DEFINITIONS: Record<PlanId, PlanDefinition> = {
     description: 'Para equipos, ópticas y consultorios.',
     priceLabel: 'Precio por configurar',
     features: ['Todo lo de Pro', 'Múltiples usuarios', 'Gestión de consultorio', 'Funciones administrativas'],
-    limits: { transposition: 9999, calculator: 9999, assistant: 9999 },
+    limits: { transposition: 9999, calculator: 9999, assistant: 9999, patients: 9999, exams: 9999 },
   },
 };
 
