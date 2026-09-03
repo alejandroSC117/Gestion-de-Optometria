@@ -1,0 +1,1 @@
+- [Expo static builds](expo-build-port.md) — the static Expo build helper probes Metro on port 8081, which can conflict with the mockup preview server.

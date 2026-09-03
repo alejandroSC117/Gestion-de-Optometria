@@ -1,7 +1,8 @@
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
+import { useAuth } from '@/context/AuthContext';
 import { PrimaryButton, Screen, SecondaryButton } from '@/components/NexusUI';
 
 function NexusMark() {
@@ -12,6 +13,9 @@ function NexusMark() {
 export default function WelcomeScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (user) return <Redirect href="/(tabs)" />;
   return (
     <Screen scroll={false}>
       <View style={styles.container}>

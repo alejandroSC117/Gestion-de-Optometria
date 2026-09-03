@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Field, PrimaryButton, Screen, TopBar } from '@/components/NexusUI';
+import { useSubscription } from '@/context/SubscriptionContext';
 
 export default function OpticalCalculationsScreen() {
   const router = useRouter();

@@ -24,7 +24,7 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerBackTitle: 'Atrás', headerShown: false }}>
+    <Stack initialRouteName="welcome" screenOptions={{ headerBackTitle: 'Atrás', headerShown: false }}>
       <Stack.Screen name="welcome" options={{ headerShown: false }} />
       <Stack.Screen name="auth" options={{ presentation: 'modal', headerShown: false }} />
       <Stack.Screen name="plans" options={{ headerShown: false }} />

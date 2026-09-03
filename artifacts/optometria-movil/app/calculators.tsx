@@ -4,7 +4,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Screen, TopBar } from '@/components/NexusUI';
 
-const categories = [
+type CalculatorTool = { label: string; caption: string; route?: '/tools/transposition' | '/tools/optical-calculations' };
+type CalculatorCategory = { title: string; icon: 'refresh-cw' | 'sliders' | 'eye'; tools: CalculatorTool[] };
+
+const categories: CalculatorCategory[] = [
   { title: 'Refracción', icon: 'refresh-cw' as const, tools: [{ label: 'Transposición de cilindro', caption: 'Positivo ↔ negativo', route: '/tools/transposition' as const }, { label: 'Equivalente esférico', caption: 'Próximamente' }, { label: 'Conversión de recetas', caption: 'Próximamente' }] },
   { title: 'Óptica', icon: 'sliders' as const, tools: [{ label: 'Distancia de vértice', caption: 'Conversión de potencia', route: '/tools/optical-calculations' as const }, { label: 'Prismas', caption: 'Próximamente' }, { label: 'Cálculos ópticos', caption: 'Vértice y distancia pupilar', route: '/tools/optical-calculations' as const }] },
   { title: 'Agudeza visual', icon: 'eye' as const, tools: [{ label: 'Conversión de escalas', caption: 'Próximamente' }] },

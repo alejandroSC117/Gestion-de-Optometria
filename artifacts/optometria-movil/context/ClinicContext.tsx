@@ -73,7 +73,7 @@ type ClinicContextValue = ClinicState & {
   getPatientExams: (id: number) => Exam[];
 };
 
-const STORAGE_KEY = '@optica-clara/clinic-state';
+const STORAGE_KEY = '@nexus/clinic-state';
 
 const initialState: ClinicState = {
   patients: [
