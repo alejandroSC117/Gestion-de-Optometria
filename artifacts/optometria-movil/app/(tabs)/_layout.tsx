@@ -39,12 +39,12 @@ function NativeTabLayout() {
 function ClassicTabLayout() {
   const colors = useColors();
   const { user, isLoading } = useAuth();
-  if (isLoading) return null;
-  if (!user) return <Redirect href="/welcome" />;
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const isIOS = Platform.OS === 'ios';
   const isWeb = Platform.OS === 'web';
+  if (isLoading) return null;
+  if (!user) return <Redirect href="/welcome" />;
 
   return (
     <Tabs
