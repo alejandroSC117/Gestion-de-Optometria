@@ -1,0 +1,635 @@
+NEXUS — FASE 1
+AMPLIACIÓN DEL PROYECTO EXISTENTE
+
+⚠️ REGLA ABSOLUTA — LEER ANTES DE MODIFICAR CUALQUIER COSA
+
+ESTE PROYECTO YA EXISTE.
+
+NO CREES UN PROYECTO NUEVO.
+NO INICIALICES UNA NUEVA APLICACIÓN.
+NO REEMPLACES EL CÓDIGO ACTUAL.
+NO BORRES LA ARQUITECTURA EXISTENTE.
+NO ELIMINES FUNCIONES QUE YA EXISTAN.
+NO CAMBIES DE TECNOLOGÍA.
+
+Debes trabajar EXCLUSIVAMENTE sobre el código existente de NEXUS que está actualmente en este repositorio.
+
+Primero analiza completamente la estructura actual del proyecto, sus archivos, dependencias, navegación, componentes y funcionalidades existentes.
+
+Antes de realizar cambios, identifica:
+- Qué tecnología está utilizando actualmente.
+- Cómo está organizada la aplicación.
+- Qué pantallas existen.
+- Cómo funciona actualmente la navegación.
+- Qué componentes ya existen y pueden reutilizarse.
+- Qué sistema de autenticación existe, si existe.
+- Qué base de datos o backend existe, si existe.
+- Qué funcionalidades ya están implementadas.
+
+NO reconstruyas aquello que ya funciona.
+
+Si necesitas una funcionalidad nueva, intégrala a la arquitectura existente.
+
+Si necesitas modificar una función existente, extiéndela o refactorízala sin romper su funcionamiento.
+
+Solo crea archivos nuevos cuando realmente sean necesarios.
+
+==================================================
+OBJETIVO DE ESTA FASE
+==================================================
+
+Ampliar la aplicación NEXUS existente para convertirla en una plataforma profesional de optometría.
+
+La Fase 1 debe establecer la estructura completa de los módulos principales que posteriormente desarrollaremos a profundidad.
+
+NO implementar todavía las fórmulas clínicas definitivas, IA real ni pagos reales.
+
+==================================================
+1. PERFIL DEL OPTOMETRISTA
+==================================================
+
+Agregar al proyecto existente un módulo:
+
+"Mi perfil profesional"
+
+Debe permitir guardar:
+
+DATOS PERSONALES
+- Nombre
+- Apellido
+- Correo electrónico
+
+DATOS PROFESIONALES
+- Profesión
+- Número de cédula/licencia profesional
+- Especialidad, si corresponde
+- País
+
+DATOS DEL CONSULTORIO U ÓPTICA
+- Nombre
+- Dirección
+- Teléfono
+- Correo electrónico
+
+DATOS PARA RECETAS
+- Nombre que aparecerá en la receta
+- Nombre profesional
+- Cédula/licencia
+- Teléfono
+- Correo
+- Dirección
+- Logotipo
+- Firma digital, preparada para implementar posteriormente
+
+IMPORTANTE:
+
+Los datos del optometrista deben guardarse y reutilizarse automáticamente al generar una receta.
+
+El optometrista NO debe tener que escribir sus datos nuevamente cada vez que genere una receta.
+
+==================================================
+2. PACIENTES
+==================================================
+
+Agregar o ampliar el módulo existente de pacientes.
+
+Debe permitir:
+
+- Crear paciente
+- Buscar paciente
+- Editar paciente
+- Ver paciente
+- Ver historial
+- Crear nuevo examen
+- Ver recetas anteriores
+
+Datos:
+
+- Nombre
+- Apellidos
+- Fecha de nacimiento
+- Sexo cuando sea necesario
+- Teléfono
+- Correo
+- Dirección cuando sea necesaria
+- Observaciones
+
+Cada paciente debe pertenecer al profesional correspondiente.
+
+==================================================
+3. HISTORIA CLÍNICA OPTOMÉTRICA
+==================================================
+
+ESTE ES UN MÓDULO PRIORITARIO.
+
+Cada paciente debe tener una HISTORIA CLÍNICA independiente.
+
+La historia debe permitir múltiples consultas ordenadas cronológicamente.
+
+Ejemplo:
+
+Paciente
+→ Historia clínica
+→ Consulta 1
+→ Consulta 2
+→ Consulta 3
+
+Cada consulta debe conservar sus propios datos.
+
+Crear las siguientes secciones:
+
+A. DATOS DE CONSULTA
+
+- Fecha
+- Hora
+- Motivo de consulta
+- Profesional responsable
+- Observaciones
+
+B. ANTECEDENTES
+
+- Antecedentes oculares
+- Antecedentes personales relevantes
+- Antecedentes familiares relevantes
+- Cirugías oculares
+- Uso de lentes
+- Uso de lentes de contacto
+- Medicamentos relevantes
+- Alergias relevantes
+
+C. AGUDEZA VISUAL
+
+Registrar:
+
+OD
+OI
+AO
+
+Para:
+- Lejos
+- Cerca
+- Sin corrección
+- Con corrección
+
+La estructura debe permitir posteriormente soportar diferentes escalas de agudeza visual.
+
+D. REFRACCIÓN
+
+OD:
+- Esfera
+- Cilindro
+- Eje
+- Adición
+- Prisma
+
+OI:
+- Esfera
+- Cilindro
+- Eje
+- Adición
+- Prisma
+
+También:
+- Distancia de vértice
+- DP
+- Observaciones
+
+E. PRUEBAS OPTOMÉTRICAS
+
+Crear estructura para posteriormente incorporar:
+
+- Pupilas
+- Motilidad ocular
+- Cover test
+- Binocularidad
+- Vergencias
+- Acomodación
+- Estereopsis
+- Visión de color
+- Campo visual
+- Queratometría
+- Tonometría
+- Lámpara de hendidura
+- Otras pruebas
+
+IMPORTANTE:
+
+NO inventar protocolos médicos.
+NO inventar valores normales.
+NO establecer criterios diagnósticos.
+
+En esta fase solamente crear la estructura y las interfaces.
+
+F. RESULTADOS Y OBSERVACIONES
+
+Campos para:
+
+- Hallazgos
+- Observaciones
+- Valoración profesional
+- Recomendaciones
+- Seguimiento
+
+G. RECETA RELACIONADA
+
+Permitir asociar una receta a la consulta.
+
+==================================================
+4. NUEVO EXAMEN
+==================================================
+
+Crear o ampliar el flujo existente para permitir:
+
+1. Seleccionar paciente
+2. Motivo de consulta
+3. Antecedentes
+4. Agudeza visual
+5. Refracción
+6. Pruebas optométricas
+7. Resultados
+8. Observaciones
+9. Receta
+10. Guardar consulta
+
+Debe existir una navegación paso a paso.
+
+Mostrar progreso.
+
+Permitir regresar a pasos anteriores.
+
+Evitar pérdida accidental de información.
+
+Al terminar:
+
+"Guardar historia clínica"
+
+==================================================
+5. RECETAS
+==================================================
+
+Crear o ampliar el módulo existente de recetas.
+
+La receta debe utilizar automáticamente:
+
+DATOS DEL PROFESIONAL
+→ desde Mi perfil profesional
+
+DATOS DEL PACIENTE
+→ desde Pacientes
+
+RESULTADOS
+→ desde Historia clínica / Examen
+
+La receta debe contemplar:
+
+DATOS DEL OPTOMETRISTA
+- Nombre
+- Profesión
+- Cédula/licencia
+- Consultorio/óptica
+- Dirección
+- Teléfono
+- Correo
+- Logotipo
+- Firma
+
+DATOS DEL PACIENTE
+- Nombre
+- Fecha
+
+GRADUACIÓN
+
+OD:
+- Esfera
+- Cilindro
+- Eje
+- Adición
+- Prisma
+
+OI:
+- Esfera
+- Cilindro
+- Eje
+- Adición
+- Prisma
+
+OTROS:
+- DP
+- Altura
+- Tipo de lente
+- Observaciones
+
+Preparar el sistema para generar PDF posteriormente.
+
+==================================================
+6. CALCULADORAS
+==================================================
+
+Mantener las calculadoras existentes.
+
+Agregar estructura para:
+
+REFRACCIÓN
+- Transposición de cilindro positivo ↔ negativo
+- Equivalente esférico
+- Conversión de recetas
+- Distancia de vértice
+
+ÓPTICA
+- Prismas
+- Descentración
+- Potencia
+- Otros cálculos ópticos
+
+AGUDEZA VISUAL
+- Conversión entre escalas
+
+IMPORTANTE:
+
+NO inventar fórmulas.
+
+Si alguna calculadora todavía no tiene fórmula implementada, crear únicamente la interfaz y dejar claramente indicado que la lógica será implementada posteriormente.
+
+NO modificar una fórmula existente sin verificar primero su funcionamiento.
+
+==================================================
+7. NEXUS AI
+==================================================
+
+Mantener la interfaz existente de Nexus AI si ya existe.
+
+Si todavía no existe, crear únicamente su pantalla e integración estructural.
+
+Preparar el sistema para conectar posteriormente un modelo de IA mediante API.
+
+NO implementar IA real todavía.
+
+La interfaz debe estar orientada exclusivamente a asistencia relacionada con optometría.
+
+Nexus AI será una herramienta de apoyo y no sustituirá el criterio profesional.
+
+==================================================
+8. SOPORTE TÉCNICO
+==================================================
+
+Agregar un módulo:
+
+"SOPORTE"
+
+Debe contener:
+
+- Centro de ayuda
+- Preguntas frecuentes
+- Reportar un problema
+- Contactar soporte
+- Mis tickets
+
+Crear estructura de tickets:
+
+- ID
+- Usuario
+- Fecha
+- Categoría
+- Descripción
+- Prioridad
+- Estado
+- Mensajes
+- Respuesta del soporte
+
+Estados:
+
+- Abierto
+- En revisión
+- En proceso
+- Resuelto
+- Cerrado
+
+Preparar posteriormente un panel administrativo para que el equipo de NEXUS pueda responder.
+
+==================================================
+9. PLANES
+==================================================
+
+Mantener o agregar:
+
+NEXUS FREE
+NEXUS PRO
+NEXUS CLINIC
+
+FREE:
+- Calculadoras básicas limitadas
+- Pacientes limitados
+- Historia clínica limitada
+- Nexus AI limitado
+
+PRO:
+- Calculadoras completas
+- Pacientes
+- Historia clínica completa
+- Examen visual
+- Recetas
+- Nexus AI
+
+CLINIC:
+- Todo PRO
+- Múltiples profesionales
+- Óptica/consultorio
+- Roles
+- Permisos
+- Funciones administrativas
+
+NO implementar pagos reales todavía.
+
+Los precios deben quedar configurables.
+
+==================================================
+10. LIMITACIONES FREE
+==================================================
+
+Crear un sistema configurable para:
+
+- Número de pacientes
+- Número de exámenes
+- Número de cálculos
+- Uso de Nexus AI
+
+Mostrar:
+
+"Has utilizado X de Y"
+
+Cuando llegue al límite:
+
+"Has alcanzado el límite de tu plan."
+
+Botón:
+
+"Actualizar a Nexus Pro"
+
+No establecer los límites de forma rígida dentro de múltiples archivos.
+
+==================================================
+11. BASE DE DATOS
+==================================================
+
+Si el proyecto ya tiene una base de datos:
+
+NO reemplazarla.
+
+Analizarla y ampliarla.
+
+Si todavía no tiene base de datos, preparar la integración con Supabase + PostgreSQL.
+
+La estructura debe contemplar:
+
+profiles
+patients
+clinical_histories
+clinical_exams
+clinical_test_results
+prescriptions
+plans
+subscriptions
+calculator_usage
+ai_usage
+support_tickets
+support_messages
+organizations
+organization_members
+
+RELACIONES:
+
+Usuario
+→ Pacientes
+
+Paciente
+→ Historia clínica
+
+Historia clínica
+→ Exámenes
+
+Examen
+→ Resultados
+
+Examen
+→ Receta
+
+Profesional
+→ Perfil profesional
+
+Profesional
+→ Organización, cuando corresponda
+
+==================================================
+12. SEGURIDAD
+==================================================
+
+Los datos de pacientes son información sensible.
+
+Implementar o preparar:
+
+- Autenticación segura
+- Control de acceso
+- Row Level Security si se utiliza Supabase
+- Separación de usuarios
+- Permisos por organización
+- Variables de entorno
+- No almacenar contraseñas directamente
+- No exponer claves secretas
+
+Durante desarrollo utilizar exclusivamente pacientes ficticios.
+
+==================================================
+13. PANTALLA PRINCIPAL
+==================================================
+
+Mantener el diseño existente si ya está creado.
+
+Ampliarlo para incluir acceso a:
+
+- Nuevo examen
+- Pacientes
+- Historia clínica
+- Calculadoras
+- Recetas
+- Nexus AI
+- Soporte
+- Mi perfil
+- Ajustes
+
+Mostrar:
+
+- Nombre del usuario
+- Plan actual
+- Uso del plan
+
+==================================================
+14. AJUSTES
+==================================================
+
+Agregar:
+
+- Mi perfil
+- Perfil profesional
+- Plan y suscripción
+- Uso
+- Notificaciones
+- Privacidad
+- Términos y condiciones
+- Cerrar sesión
+
+==================================================
+15. REGLAS DE DESARROLLO
+==================================================
+
+ANTES DE MODIFICAR:
+
+1. Analiza el código existente.
+2. Identifica las funcionalidades actuales.
+3. Identifica qué archivos deben modificarse.
+4. Identifica qué archivos nuevos son necesarios.
+5. Conserva todo lo que ya funciona.
+
+DESPUÉS DE MODIFICAR:
+
+1. Comprueba que la aplicación compile.
+2. Comprueba que la navegación funcione.
+3. Comprueba que las pantallas existentes sigan funcionando.
+4. Comprueba que no existan errores de TypeScript.
+5. Comprueba que no hayas eliminado accidentalmente funcionalidades existentes.
+
+NO hagas una reconstrucción completa.
+
+NO reemplaces el proyecto.
+
+NO cambies React Native/Expo por otra tecnología.
+
+NO borres archivos existentes salvo que sea absolutamente necesario y justificado.
+
+Si encuentras código que necesita reorganizarse, hazlo de manera incremental y conserva la funcionalidad.
+
+==================================================
+RESULTADO ESPERADO
+==================================================
+
+Al terminar esta fase, NEXUS debe conservar todo lo que ya tiene y además contar con la estructura navegable de:
+
+Bienvenida
+→ Registro
+→ Login
+→ Planes
+→ Inicio
+→ Mi perfil profesional
+→ Pacientes
+→ Historia clínica
+→ Nuevo examen
+→ Calculadoras
+→ Recetas
+→ Nexus AI
+→ Soporte
+→ Ajustes
+
+La prioridad es construir sobre el código EXISTENTE.
+
+NO empezar desde cero.
+NO crear otro proyecto.
+NO borrar el trabajo realizado anteriormente.
