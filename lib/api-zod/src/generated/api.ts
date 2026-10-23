@@ -17,3 +17,352 @@ export const HealthCheckResponse = zod.object({
 })
 
 
+/**
+ * @summary Get the authenticated application profile
+ */
+export const GetCurrentUserResponse = zod.object({
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string(),
+  "profession": zod.string(),
+  "licenseNumber": zod.string(),
+  "specialty": zod.string(),
+  "country": zod.string(),
+  "officeName": zod.string(),
+  "officeAddress": zod.string(),
+  "officePhone": zod.string(),
+  "officeEmail": zod.string(),
+  "prescriptionName": zod.string(),
+  "prescriptionProfessionalName": zod.string(),
+  "prescriptionLicense": zod.string(),
+  "prescriptionPhone": zod.string(),
+  "prescriptionEmail": zod.string(),
+  "prescriptionAddress": zod.string(),
+  "logoUri": zod.string().optional(),
+  "signatureUri": zod.string().optional()
+})
+
+
+/**
+ * @summary Save the authenticated professional profile
+ */
+export const UpdateProfessionalProfileBody = zod.object({
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string(),
+  "profession": zod.string(),
+  "licenseNumber": zod.string(),
+  "specialty": zod.string(),
+  "country": zod.string(),
+  "officeName": zod.string(),
+  "officeAddress": zod.string(),
+  "officePhone": zod.string(),
+  "officeEmail": zod.string(),
+  "prescriptionName": zod.string(),
+  "prescriptionProfessionalName": zod.string(),
+  "prescriptionLicense": zod.string(),
+  "prescriptionPhone": zod.string(),
+  "prescriptionEmail": zod.string(),
+  "prescriptionAddress": zod.string(),
+  "logoUri": zod.string().optional(),
+  "signatureUri": zod.string().optional()
+})
+
+export const UpdateProfessionalProfileResponse = zod.object({
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string(),
+  "profession": zod.string(),
+  "licenseNumber": zod.string(),
+  "specialty": zod.string(),
+  "country": zod.string(),
+  "officeName": zod.string(),
+  "officeAddress": zod.string(),
+  "officePhone": zod.string(),
+  "officeEmail": zod.string(),
+  "prescriptionName": zod.string(),
+  "prescriptionProfessionalName": zod.string(),
+  "prescriptionLicense": zod.string(),
+  "prescriptionPhone": zod.string(),
+  "prescriptionEmail": zod.string(),
+  "prescriptionAddress": zod.string(),
+  "logoUri": zod.string().optional(),
+  "signatureUri": zod.string().optional()
+})
+
+
+/**
+ * @summary Search the authenticated professional's patients
+ */
+export const listPatientsQueryQMax = 100;
+
+
+
+export const ListPatientsQueryParams = zod.object({
+  "q": zod.coerce.string().max(listPatientsQueryQMax).optional()
+})
+
+export const ListPatientsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "birthDate": zod.coerce.date().optional(),
+  "sex": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "email": zod.string().optional(),
+  "address": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "status": zod.enum(['active', 'inactive']),
+  "createdAt": zod.coerce.date()
+})
+export const ListPatientsResponse = zod.array(ListPatientsResponseItem)
+
+
+/**
+ * @summary Create a patient for the authenticated professional
+ */
+export const createPatientBodyFirstNameMax = 120;
+
+export const createPatientBodyLastNameMax = 160;
+
+export const createPatientBodySexMax = 40;
+
+export const createPatientBodyPhoneMax = 60;
+
+export const createPatientBodyEmailMax = 320;
+
+export const createPatientBodyAddressMax = 2000;
+
+export const createPatientBodyNotesMax = 5000;
+
+
+
+export const CreatePatientBody = zod.object({
+  "firstName": zod.string().min(1).max(createPatientBodyFirstNameMax),
+  "lastName": zod.string().min(1).max(createPatientBodyLastNameMax),
+  "birthDate": zod.coerce.date().optional(),
+  "sex": zod.string().max(createPatientBodySexMax).optional(),
+  "phone": zod.string().max(createPatientBodyPhoneMax).optional(),
+  "email": zod.string().email().max(createPatientBodyEmailMax).optional(),
+  "address": zod.string().max(createPatientBodyAddressMax).optional(),
+  "notes": zod.string().max(createPatientBodyNotesMax).optional(),
+  "status": zod.enum(['active', 'inactive']).optional()
+})
+
+export const CreatePatientResponse = zod.object({
+  "id": zod.string().uuid(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "birthDate": zod.coerce.date().optional(),
+  "sex": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "email": zod.string().optional(),
+  "address": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "status": zod.enum(['active', 'inactive']),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get a patient owned by the authenticated professional
+ */
+export const GetPatientParams = zod.object({
+  "patientId": zod.coerce.string().uuid()
+})
+
+export const GetPatientResponse = zod.object({
+  "id": zod.string().uuid(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "birthDate": zod.coerce.date().optional(),
+  "sex": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "email": zod.string().optional(),
+  "address": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "status": zod.enum(['active', 'inactive']),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a patient owned by the authenticated professional
+ */
+export const UpdatePatientParams = zod.object({
+  "patientId": zod.coerce.string().uuid()
+})
+
+export const updatePatientBodyFirstNameMax = 120;
+
+export const updatePatientBodyLastNameMax = 160;
+
+export const updatePatientBodySexMax = 40;
+
+export const updatePatientBodyPhoneMax = 60;
+
+export const updatePatientBodyEmailMax = 320;
+
+export const updatePatientBodyAddressMax = 2000;
+
+export const updatePatientBodyNotesMax = 5000;
+
+
+
+export const UpdatePatientBody = zod.object({
+  "firstName": zod.string().min(1).max(updatePatientBodyFirstNameMax),
+  "lastName": zod.string().min(1).max(updatePatientBodyLastNameMax),
+  "birthDate": zod.coerce.date().optional(),
+  "sex": zod.string().max(updatePatientBodySexMax).optional(),
+  "phone": zod.string().max(updatePatientBodyPhoneMax).optional(),
+  "email": zod.string().email().max(updatePatientBodyEmailMax).optional(),
+  "address": zod.string().max(updatePatientBodyAddressMax).optional(),
+  "notes": zod.string().max(updatePatientBodyNotesMax).optional(),
+  "status": zod.enum(['active', 'inactive']).optional()
+})
+
+export const UpdatePatientResponse = zod.object({
+  "id": zod.string().uuid(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "birthDate": zod.coerce.date().optional(),
+  "sex": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "email": zod.string().optional(),
+  "address": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "status": zod.enum(['active', 'inactive']),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List a patient's consultations in date order
+ */
+export const ListPatientConsultationsParams = zod.object({
+  "patientId": zod.coerce.string().uuid()
+})
+
+export const ListPatientConsultationsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "patientId": zod.string().uuid(),
+  "consultationDate": zod.coerce.date(),
+  "consultationTime": zod.string().optional(),
+  "reason": zod.string().optional(),
+  "observations": zod.string().optional(),
+  "clinicalData": zod.record(zod.string(), zod.unknown()),
+  "createdAt": zod.coerce.date()
+})
+export const ListPatientConsultationsResponse = zod.array(ListPatientConsultationsResponseItem)
+
+
+/**
+ * @summary Save a consultation for a patient owned by the authenticated professional
+ */
+export const CreatePatientConsultationParams = zod.object({
+  "patientId": zod.coerce.string().uuid()
+})
+
+export const createPatientConsultationBodyConsultationTimeMax = 8;
+
+export const createPatientConsultationBodyReasonMax = 2000;
+
+export const createPatientConsultationBodyObservationsMax = 5000;
+
+
+
+export const CreatePatientConsultationBody = zod.object({
+  "consultationDate": zod.coerce.date(),
+  "consultationTime": zod.string().max(createPatientConsultationBodyConsultationTimeMax).optional(),
+  "reason": zod.string().max(createPatientConsultationBodyReasonMax).optional(),
+  "observations": zod.string().max(createPatientConsultationBodyObservationsMax).optional(),
+  "clinicalData": zod.record(zod.string(), zod.unknown())
+})
+
+export const CreatePatientConsultationResponse = zod.object({
+  "id": zod.string().uuid(),
+  "patientId": zod.string().uuid(),
+  "consultationDate": zod.coerce.date(),
+  "consultationTime": zod.string().optional(),
+  "reason": zod.string().optional(),
+  "observations": zod.string().optional(),
+  "clinicalData": zod.record(zod.string(), zod.unknown()),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List a patient's prescriptions
+ */
+export const ListPatientPrescriptionsParams = zod.object({
+  "patientId": zod.coerce.string().uuid()
+})
+
+export const ListPatientPrescriptionsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "patientId": zod.string().uuid(),
+  "consultationId": zod.string().uuid().optional(),
+  "issuedAt": zod.coerce.date(),
+  "prescriptionData": zod.record(zod.string(), zod.unknown()),
+  "professionalSnapshot": zod.record(zod.string(), zod.unknown()),
+  "createdAt": zod.coerce.date()
+})
+export const ListPatientPrescriptionsResponse = zod.array(ListPatientPrescriptionsResponseItem)
+
+
+/**
+ * @summary Save a prescription for a patient
+ */
+export const CreatePatientPrescriptionParams = zod.object({
+  "patientId": zod.coerce.string().uuid()
+})
+
+export const CreatePatientPrescriptionBody = zod.object({
+  "consultationId": zod.string().uuid().optional(),
+  "issuedAt": zod.coerce.date(),
+  "prescriptionData": zod.record(zod.string(), zod.unknown()),
+  "professionalSnapshot": zod.record(zod.string(), zod.unknown())
+})
+
+export const CreatePatientPrescriptionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "patientId": zod.string().uuid(),
+  "consultationId": zod.string().uuid().optional(),
+  "issuedAt": zod.coerce.date(),
+  "prescriptionData": zod.record(zod.string(), zod.unknown()),
+  "professionalSnapshot": zod.record(zod.string(), zod.unknown()),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Load the authenticated professional's saved exam draft
+ */
+export const GetClinicalDraftResponse = zod.union([zod.object({
+  "patientId": zod.string().uuid().optional(),
+  "draftData": zod.record(zod.string(), zod.unknown()),
+  "updatedAt": zod.coerce.date()
+}),zod.null()])
+
+
+/**
+ * @summary Autosave the authenticated professional's exam draft
+ */
+export const SaveClinicalDraftBody = zod.object({
+  "patientId": zod.string().uuid().optional(),
+  "draftData": zod.record(zod.string(), zod.unknown())
+})
+
+export const SaveClinicalDraftResponse = zod.object({
+  "patientId": zod.string().uuid().optional(),
+  "draftData": zod.record(zod.string(), zod.unknown()),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete the authenticated professional's draft after saving the consultation
+ */
+export const DeleteClinicalDraftResponse = zod.void()
+
+

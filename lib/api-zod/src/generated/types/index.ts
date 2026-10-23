@@ -6,4 +6,25 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './clinicalDraft';
+export * from './clinicalDraftDraftData';
+export * from './clinicalDraftInput';
+export * from './clinicalDraftInputDraftData';
+export * from './consultation';
+export * from './consultationClinicalData';
+export * from './consultationInput';
+export * from './consultationInputClinicalData';
 export * from './healthStatus';
+export * from './listPatientsParams';
+export * from './patient';
+export * from './patientInput';
+export * from './patientInputStatus';
+export * from './patientStatus';
+export * from './prescription';
+export * from './prescriptionInput';
+export * from './prescriptionInputPrescriptionData';
+export * from './prescriptionInputProfessionalSnapshot';
+export * from './prescriptionPrescriptionData';
+export * from './prescriptionProfessionalSnapshot';
+export * from './professionalProfile';
+export * from './professionalProfileInput';

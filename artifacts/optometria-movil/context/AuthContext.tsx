@@ -1,48 +1,28 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
+import { useAuth as useClerkAuth, useUser } from '@clerk/expo';
 
 export type AuthUser = { id: string; name: string; email: string };
 type AuthContextValue = {
   user: AuthUser | null;
   isLoading: boolean;
-  signIn: (email: string) => void;
-  signUp: (name: string, email: string) => void;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 };
 
-const STORAGE_KEY = '@nexus/auth-user';
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((stored) => stored && setUser(JSON.parse(stored) as AuthUser))
-      .catch(() => undefined)
-      .finally(() => setIsLoading(false));
-  }, []);
-
-  const persist = useCallback((nextUser: AuthUser | null) => {
-    setUser(nextUser);
-    if (nextUser) AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser)).catch(() => undefined);
-    else AsyncStorage.removeItem(STORAGE_KEY).catch(() => undefined);
-  }, []);
-
+  const { isLoaded, signOut } = useClerkAuth();
+  const { user: clerkUser, isLoaded: userLoaded } = useUser();
+  const user = clerkUser ? {
+    id: clerkUser.id,
+    name: clerkUser.fullName || clerkUser.firstName || 'Profesional',
+    email: clerkUser.primaryEmailAddress?.emailAddress || '',
+  } : null;
   const value = useMemo<AuthContextValue>(() => ({
     user,
-    isLoading,
-    signIn: (email) => {
-      const cleanEmail = email.trim().toLowerCase();
-      persist({ id: cleanEmail || 'demo-user', name: cleanEmail.split('@')[0] || 'Profesional', email: cleanEmail || 'demo@nexus.app' });
-    },
-    signUp: (name, email) => {
-      const cleanEmail = email.trim().toLowerCase();
-      persist({ id: cleanEmail || 'demo-user', name: name.trim() || 'Profesional', email: cleanEmail || 'demo@nexus.app' });
-    },
-    signOut: () => persist(null),
-  }), [isLoading, persist, user]);
+    isLoading: !isLoaded || !userLoaded,
+    signOut: () => signOut(),
+  }), [isLoaded, signOut, user, userLoaded]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

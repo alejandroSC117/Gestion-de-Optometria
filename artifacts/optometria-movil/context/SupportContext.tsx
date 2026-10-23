@@ -1,7 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
-export type SupportStatus = 'open' | 'review' | 'in_progress' | 'resolved' | 'closed';
+export type SupportStatus = 'draft';
 export type SupportPriority = 'low' | 'normal' | 'high';
 
 export type SupportTicket = {
@@ -22,39 +22,38 @@ type SupportContextValue = {
   createTicket: (ticket: Pick<SupportTicket, 'userId' | 'category' | 'description' | 'priority'>) => SupportTicket;
 };
 
-const STORAGE_KEY = '@nexus/support-tickets';
 const SupportContext = createContext<SupportContextValue | null>(null);
 
 export function SupportProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [previousUserId, setPreviousUserId] = useState<string | undefined>(user?.id);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((stored) => stored && setTickets(JSON.parse(stored) as SupportTicket[]))
-      .catch(() => undefined)
-      .finally(() => setIsHydrated(true));
-  }, []);
-
-  useEffect(() => {
-    if (isHydrated) AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(tickets)).catch(() => undefined);
-  }, [isHydrated, tickets]);
+    if (previousUserId !== user?.id) {
+      setTickets([]);
+      setPreviousUserId(user?.id);
+    }
+  }, [previousUserId, user?.id]);
 
   const value = useMemo(() => ({
     tickets,
-    isHydrated,
-    createTicket: (ticket: Pick<SupportTicket, 'userId' | 'category' | 'description' | 'priority'>) => {
+    isHydrated: true,
+    createTicket: (ticket: Pick<SupportTicket, 'category' | 'description' | 'priority'>) => {
+      if (!user?.id) throw new Error('Inicia sesión para guardar un borrador.');
+      const createdAt = new Date().toISOString();
       const created: SupportTicket = {
         ...ticket,
-        id: `NXS-${Date.now().toString().slice(-6)}`,
-        date: new Date().toISOString(),
-        status: 'open',
-        messages: [{ id: `${Date.now()}-message`, author: 'user', text: ticket.description, date: new Date().toISOString() }],
+        userId: user.id,
+        id: `BORRADOR-${Date.now().toString().slice(-6)}`,
+        date: createdAt,
+        status: 'draft',
+        messages: [{ id: `${Date.now()}-message`, author: 'user', text: ticket.description, date: createdAt }],
       };
       setTickets((current) => [created, ...current]);
       return created;
     },
-  }), [isHydrated, tickets]);
+  }), [tickets, user?.id]);
 
   return <SupportContext.Provider value={value}>{children}</SupportContext.Provider>;
 }

@@ -10,7 +10,7 @@ export default function ClinicalHistoryScreen() {
   const router = useRouter();
   const { patientId } = useLocalSearchParams<{ patientId: string }>();
   const { getPatient, getPatientConsultations } = useClinic();
-  const patient = getPatient(Number(patientId));
+  const patient = getPatient(patientId ?? '');
   const consultations = patient ? getPatientConsultations(patient.id) : [];
 
   if (!patient) return <Screen><TopBar title="Historia clínica" action={{ icon: 'x', label: 'Cerrar', onPress: () => router.back() }} /><EmptyState icon="user-x" title="Paciente no encontrado" message="No se pudo cargar esta historia clínica." /></Screen>;

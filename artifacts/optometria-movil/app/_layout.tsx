@@ -18,11 +18,28 @@ import { AuthProvider } from '@/context/AuthContext';
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import { ProfessionalProfileProvider } from '@/context/ProfessionalProfileContext';
 import { SupportProvider } from '@/context/SupportContext';
+import { ClerkLoaded, ClerkProvider, useAuth as useClerkAuth } from '@clerk/expo';
+import { tokenCache } from '@clerk/expo/token-cache';
+import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
+const expoPublicDomain = process.env.EXPO_PUBLIC_DOMAIN;
+if (expoPublicDomain) setBaseUrl(`https://${expoPublicDomain}`);
+
+const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
+const clerkProxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
+
+function ApiAuthTokenBridge() {
+  const { getToken } = useClerkAuth();
+  useEffect(() => {
+    setAuthTokenGetter(() => getToken());
+    return () => setAuthTokenGetter(null);
+  }, [getToken]);
+  return null;
+}
 
 function RootLayoutNav() {
   return (
@@ -58,26 +75,31 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <SafeAreaProvider>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <SubscriptionProvider>
-               <ProfessionalProfileProvider>
-                <SupportProvider>
-                  <ClinicProvider>
-                    <GestureHandlerRootView style={{ flex: 1 }}>
-                      <KeyboardProvider>
-                        <RootLayoutNav />
-                      </KeyboardProvider>
-                    </GestureHandlerRootView>
-                  </ClinicProvider>
-                </SupportProvider>
-              </ProfessionalProfileProvider>
-            </SubscriptionProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </SafeAreaProvider>
+    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache} proxyUrl={clerkProxyUrl}>
+      <ClerkLoaded>
+        <ApiAuthTokenBridge />
+        <SafeAreaProvider>
+          <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+              <AuthProvider>
+                <SubscriptionProvider>
+                  <ProfessionalProfileProvider>
+                    <SupportProvider>
+                      <ClinicProvider>
+                        <GestureHandlerRootView style={{ flex: 1 }}>
+                          <KeyboardProvider>
+                            <RootLayoutNav />
+                          </KeyboardProvider>
+                        </GestureHandlerRootView>
+                      </ClinicProvider>
+                    </SupportProvider>
+                  </ProfessionalProfileProvider>
+                </SubscriptionProvider>
+              </AuthProvider>
+            </QueryClientProvider>
+          </ErrorBoundary>
+        </SafeAreaProvider>
+      </ClerkLoaded>
+    </ClerkProvider>
   );
 }

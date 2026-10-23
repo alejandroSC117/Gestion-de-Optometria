@@ -106,4 +106,5 @@ const styles = StyleSheet.create({
   threeColumns: { flexDirection: 'row', gap: 8 },
   column: { flex: 1 },
   axisColumn: { width: 73 },
+  profileHint: { fontSize: 11, lineHeight: 17, marginTop: 2, marginBottom: 16 },
 });

@@ -1,5 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getCurrentUser, updateProfessionalProfile as updateProfileRequest } from '@workspace/api-client-react';
+import { useAuth } from '@/context/AuthContext';
 
 export type ProfessionalProfile = {
   firstName: string;
@@ -22,8 +24,6 @@ export type ProfessionalProfile = {
   logoUri?: string;
   signatureUri?: string;
 };
-
-const STORAGE_KEY = '@nexus/professional-profile';
 
 export const emptyProfessionalProfile: ProfessionalProfile = {
   firstName: '',
@@ -48,33 +48,50 @@ export const emptyProfessionalProfile: ProfessionalProfile = {
 type ProfessionalProfileContextValue = {
   profile: ProfessionalProfile;
   isLoading: boolean;
-  updateProfile: (changes: Partial<ProfessionalProfile>) => void;
+  error: string | null;
+  updateProfile: (changes: Partial<ProfessionalProfile>) => Promise<void>;
 };
 
 const ProfessionalProfileContext = createContext<ProfessionalProfileContextValue | null>(null);
 
 export function ProfessionalProfileProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<ProfessionalProfile>(emptyProfessionalProfile);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const profileQuery = useQuery({
+    queryKey: ['clinic', 'profile', user?.id],
+    queryFn: () => getCurrentUser(),
+    enabled: Boolean(user?.id),
+    retry: false,
+  });
+  const isLoading = Boolean(user?.id) && profileQuery.isLoading;
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((stored) => {
-        if (stored) setProfile({ ...emptyProfessionalProfile, ...(JSON.parse(stored) as Partial<ProfessionalProfile>) });
-      })
-      .catch(() => undefined)
-      .finally(() => setIsLoading(false));
-  }, []);
+    setProfile(emptyProfessionalProfile);
+  }, [user?.id]);
 
   useEffect(() => {
-    if (!isLoading) AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile)).catch(() => undefined);
-  }, [isLoading, profile]);
+    if (!profileQuery.data) return;
+    setProfile({
+      ...emptyProfessionalProfile,
+      ...profileQuery.data,
+      firstName: profileQuery.data.firstName || user?.firstName || '',
+      lastName: profileQuery.data.lastName || user?.lastName || '',
+      email: profileQuery.data.email || user?.email || '',
+    });
+  }, [profileQuery.data, user?.email, user?.firstName, user?.lastName]);
 
   const value = useMemo(() => ({
     profile,
     isLoading,
-    updateProfile: (changes: Partial<ProfessionalProfile>) => setProfile((current) => ({ ...current, ...changes })),
-  }), [isLoading, profile]);
+    error: profileQuery.error instanceof Error ? profileQuery.error.message : null,
+    updateProfile: async (changes: Partial<ProfessionalProfile>) => {
+      if (!user?.id) throw new Error('Inicia sesión para guardar tu perfil profesional.');
+      const updated = await updateProfileRequest({ ...profile, ...changes });
+      setProfile({ ...emptyProfessionalProfile, ...updated });
+      queryClient.setQueryData(['clinic', 'profile', user.id], updated);
+    },
+  }), [isLoading, profile, profileQuery.error, queryClient, user?.id]);
 
   return <ProfessionalProfileContext.Provider value={value}>{children}</ProfessionalProfileContext.Provider>;
 }

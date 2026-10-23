@@ -13,7 +13,7 @@ export default function PatientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getPatient, getPatientAppointments, getPatientPrescription, getPatientExams } = useClinic();
   const { canAccess } = useSubscription();
-  const patient = getPatient(Number(id));
+  const patient = getPatient(id ?? '');
   const appointments = useMemo(() => patient ? getPatientAppointments(patient.id) : [], [getPatientAppointments, patient]);
   const exams = useMemo(() => patient ? getPatientExams(patient.id) : [], [getPatientExams, patient]);
   const prescription = patient ? getPatientPrescription(patient.id) : undefined;

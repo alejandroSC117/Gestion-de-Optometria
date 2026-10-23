@@ -17,8 +17,9 @@ export default function NewAppointmentScreen() {
   const params = useLocalSearchParams<{ patientId?: string }>();
   const colors = useColors();
   const { patients, addAppointment } = useClinic();
-  const [patientId, setPatientId] = useState(Number(params.patientId) || patients[0]?.id || 0);
-  const [date, setDate] = useState('2026-09-03');
+  const [patientId, setPatientId] = useState(params.patientId ?? patients[0]?.id ?? '');
+  const today = new Date();
+  const [date, setDate] = useState(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
   const [time, setTime] = useState('10:00');
   const [type, setType] = useState<Appointment['type']>('exam');
   const [notes, setNotes] = useState('');

@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: clinic
+    description: Authenticated clinic records
 paths:
   /healthz:
     get:
@@ -24,6 +26,250 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /me:
+    get:
+      operationId: getCurrentUser
+      tags: [clinic]
+      summary: Get the authenticated application profile
+      responses:
+        "200":
+          description: Authenticated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfessionalProfile"
+        "401":
+          description: Authentication required
+  /professional-profile:
+    put:
+      operationId: updateProfessionalProfile
+      tags: [clinic]
+      summary: Save the authenticated professional profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfessionalProfileInput"
+      responses:
+        "200":
+          description: Saved profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfessionalProfile"
+        "401":
+          description: Authentication required
+  /patients:
+    get:
+      operationId: listPatients
+      tags: [clinic]
+      summary: Search the authenticated professional's patients
+      parameters:
+        - in: query
+          name: q
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+      responses:
+        "200":
+          description: Patients visible to the authenticated professional
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Patient"
+        "401":
+          description: Authentication required
+    post:
+      operationId: createPatient
+      tags: [clinic]
+      summary: Create a patient for the authenticated professional
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientInput"
+      responses:
+        "201":
+          description: Created patient
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+        "401":
+          description: Authentication required
+        "403":
+          description: Plan limit reached
+  /patients/{patientId}:
+    parameters:
+      - in: path
+        name: patientId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getPatient
+      tags: [clinic]
+      summary: Get a patient owned by the authenticated professional
+      responses:
+        "200":
+          description: Patient
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+        "404":
+          description: Patient not found
+    patch:
+      operationId: updatePatient
+      tags: [clinic]
+      summary: Update a patient owned by the authenticated professional
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientInput"
+      responses:
+        "200":
+          description: Updated patient
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+        "404":
+          description: Patient not found
+  /patients/{patientId}/consultations:
+    parameters:
+      - in: path
+        name: patientId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: listPatientConsultations
+      tags: [clinic]
+      summary: List a patient's consultations in date order
+      responses:
+        "200":
+          description: Consultation history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Consultation"
+        "404":
+          description: Patient not found
+    post:
+      operationId: createPatientConsultation
+      tags: [clinic]
+      summary: Save a consultation for a patient owned by the authenticated professional
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultationInput"
+      responses:
+        "201":
+          description: Saved consultation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Consultation"
+        "403":
+          description: Plan limit reached
+        "404":
+          description: Patient not found
+  /patients/{patientId}/prescriptions:
+    parameters:
+      - in: path
+        name: patientId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: listPatientPrescriptions
+      tags: [clinic]
+      summary: List a patient's prescriptions
+      responses:
+        "200":
+          description: Prescriptions in date order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Prescription"
+        "404":
+          description: Patient not found
+    post:
+      operationId: createPatientPrescription
+      tags: [clinic]
+      summary: Save a prescription for a patient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrescriptionInput"
+      responses:
+        "201":
+          description: Saved prescription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prescription"
+        "404":
+          description: Patient not found
+  /clinical-draft:
+    get:
+      operationId: getClinicalDraft
+      tags: [clinic]
+      summary: Load the authenticated professional's saved exam draft
+      responses:
+        "200":
+          description: Current draft, or null when none exists
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ClinicalDraft"
+                  - type: "null"
+    put:
+      operationId: saveClinicalDraft
+      tags: [clinic]
+      summary: Autosave the authenticated professional's exam draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClinicalDraftInput"
+      responses:
+        "200":
+          description: Saved draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicalDraft"
+        "404":
+          description: Selected patient not found
+    delete:
+      operationId: deleteClinicalDraft
+      tags: [clinic]
+      summary: Delete the authenticated professional's draft after saving the consultation
+      responses:
+        "204":
+          description: Draft deleted
 components:
   schemas:
     HealthStatus:
@@ -33,3 +279,126 @@ components:
           type: string
       required:
         - status
+    ProfessionalProfile:
+      type: object
+      required: [firstName, lastName, email, profession, licenseNumber, specialty, country, officeName, officeAddress, officePhone, officeEmail, prescriptionName, prescriptionProfessionalName, prescriptionLicense, prescriptionPhone, prescriptionEmail, prescriptionAddress]
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string }
+        profession: { type: string }
+        licenseNumber: { type: string }
+        specialty: { type: string }
+        country: { type: string }
+        officeName: { type: string }
+        officeAddress: { type: string }
+        officePhone: { type: string }
+        officeEmail: { type: string }
+        prescriptionName: { type: string }
+        prescriptionProfessionalName: { type: string }
+        prescriptionLicense: { type: string }
+        prescriptionPhone: { type: string }
+        prescriptionEmail: { type: string }
+        prescriptionAddress: { type: string }
+        logoUri: { type: string }
+        signatureUri: { type: string }
+    ProfessionalProfileInput:
+      allOf:
+        - $ref: "#/components/schemas/ProfessionalProfile"
+    Patient:
+      type: object
+      required: [id, firstName, lastName, status, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        firstName: { type: string }
+        lastName: { type: string }
+        birthDate: { type: string, format: date }
+        sex: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        address: { type: string }
+        notes: { type: string }
+        status: { type: string, enum: [active, inactive] }
+        createdAt: { type: string, format: date-time }
+    PatientInput:
+      type: object
+      required: [firstName, lastName]
+      properties:
+        firstName: { type: string, minLength: 1, maxLength: 120 }
+        lastName: { type: string, minLength: 1, maxLength: 160 }
+        birthDate: { type: string, format: date }
+        sex: { type: string, maxLength: 40 }
+        phone: { type: string, maxLength: 60 }
+        email: { type: string, format: email, maxLength: 320 }
+        address: { type: string, maxLength: 2000 }
+        notes: { type: string, maxLength: 5000 }
+        status: { type: string, enum: [active, inactive] }
+    Consultation:
+      type: object
+      required: [id, patientId, consultationDate, clinicalData, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        patientId: { type: string, format: uuid }
+        consultationDate: { type: string, format: date }
+        consultationTime: { type: string }
+        reason: { type: string }
+        observations: { type: string }
+        clinicalData:
+          type: object
+          additionalProperties: true
+        createdAt: { type: string, format: date-time }
+    ConsultationInput:
+      type: object
+      required: [consultationDate, clinicalData]
+      properties:
+        consultationDate: { type: string, format: date }
+        consultationTime: { type: string, maxLength: 8 }
+        reason: { type: string, maxLength: 2000 }
+        observations: { type: string, maxLength: 5000 }
+        clinicalData:
+          type: object
+          additionalProperties: true
+    Prescription:
+      type: object
+      required: [id, patientId, issuedAt, prescriptionData, professionalSnapshot, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        patientId: { type: string, format: uuid }
+        consultationId: { type: string, format: uuid }
+        issuedAt: { type: string, format: date }
+        prescriptionData:
+          type: object
+          additionalProperties: true
+        professionalSnapshot:
+          type: object
+          additionalProperties: true
+        createdAt: { type: string, format: date-time }
+    PrescriptionInput:
+      type: object
+      required: [issuedAt, prescriptionData, professionalSnapshot]
+      properties:
+        consultationId: { type: string, format: uuid }
+        issuedAt: { type: string, format: date }
+        prescriptionData:
+          type: object
+          additionalProperties: true
+        professionalSnapshot:
+          type: object
+          additionalProperties: true
+    ClinicalDraft:
+      type: object
+      required: [draftData, updatedAt]
+      properties:
+        patientId: { type: string, format: uuid }
+        draftData:
+          type: object
+          additionalProperties: true
+        updatedAt: { type: string, format: date-time }
+    ClinicalDraftInput:
+      type: object
+      required: [draftData]
+      properties:
+        patientId: { type: string, format: uuid }
+        draftData:
+          type: object
+          additionalProperties: true

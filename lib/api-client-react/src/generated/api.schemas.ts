@@ -9,3 +9,155 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface ProfessionalProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  profession: string;
+  licenseNumber: string;
+  specialty: string;
+  country: string;
+  officeName: string;
+  officeAddress: string;
+  officePhone: string;
+  officeEmail: string;
+  prescriptionName: string;
+  prescriptionProfessionalName: string;
+  prescriptionLicense: string;
+  prescriptionPhone: string;
+  prescriptionEmail: string;
+  prescriptionAddress: string;
+  logoUri?: string;
+  signatureUri?: string;
+}
+
+export type ProfessionalProfileInput = ProfessionalProfile;
+
+export type PatientStatus = typeof PatientStatus[keyof typeof PatientStatus];
+
+
+export const PatientStatus = {
+  active: 'active',
+  inactive: 'inactive',
+} as const;
+
+export interface Patient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  birthDate?: string;
+  sex?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  notes?: string;
+  status: PatientStatus;
+  createdAt: string;
+}
+
+export type PatientInputStatus = typeof PatientInputStatus[keyof typeof PatientInputStatus];
+
+
+export const PatientInputStatus = {
+  active: 'active',
+  inactive: 'inactive',
+} as const;
+
+export interface PatientInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  firstName: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  lastName: string;
+  birthDate?: string;
+  /** @maxLength 40 */
+  sex?: string;
+  /** @maxLength 60 */
+  phone?: string;
+  /** @maxLength 320 */
+  email?: string;
+  /** @maxLength 2000 */
+  address?: string;
+  /** @maxLength 5000 */
+  notes?: string;
+  status?: PatientInputStatus;
+}
+
+export type ConsultationClinicalData = { [key: string]: unknown };
+
+export interface Consultation {
+  id: string;
+  patientId: string;
+  consultationDate: string;
+  consultationTime?: string;
+  reason?: string;
+  observations?: string;
+  clinicalData: ConsultationClinicalData;
+  createdAt: string;
+}
+
+export type ConsultationInputClinicalData = { [key: string]: unknown };
+
+export interface ConsultationInput {
+  consultationDate: string;
+  /** @maxLength 8 */
+  consultationTime?: string;
+  /** @maxLength 2000 */
+  reason?: string;
+  /** @maxLength 5000 */
+  observations?: string;
+  clinicalData: ConsultationInputClinicalData;
+}
+
+export type PrescriptionPrescriptionData = { [key: string]: unknown };
+
+export type PrescriptionProfessionalSnapshot = { [key: string]: unknown };
+
+export interface Prescription {
+  id: string;
+  patientId: string;
+  consultationId?: string;
+  issuedAt: string;
+  prescriptionData: PrescriptionPrescriptionData;
+  professionalSnapshot: PrescriptionProfessionalSnapshot;
+  createdAt: string;
+}
+
+export type PrescriptionInputPrescriptionData = { [key: string]: unknown };
+
+export type PrescriptionInputProfessionalSnapshot = { [key: string]: unknown };
+
+export interface PrescriptionInput {
+  consultationId?: string;
+  issuedAt: string;
+  prescriptionData: PrescriptionInputPrescriptionData;
+  professionalSnapshot: PrescriptionInputProfessionalSnapshot;
+}
+
+export type ClinicalDraftDraftData = { [key: string]: unknown };
+
+export interface ClinicalDraft {
+  patientId?: string;
+  draftData: ClinicalDraftDraftData;
+  updatedAt: string;
+}
+
+export type ClinicalDraftInputDraftData = { [key: string]: unknown };
+
+export interface ClinicalDraftInput {
+  patientId?: string;
+  draftData: ClinicalDraftInputDraftData;
+}
+
+export type ListPatientsParams = {
+/**
+ * @maxLength 100
+ */
+q?: string;
+};
+
