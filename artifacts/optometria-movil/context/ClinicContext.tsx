@@ -255,6 +255,7 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
       const created = mapApiPatient(await createPatientRequest(cleanPatientInput(patient)));
       setState((current) => ({ ...current, patients: [created, ...current.patients] }));
       await queryClient.invalidateQueries({ queryKey: ['clinic', 'patients', user?.id] });
+      await queryClient.invalidateQueries({ queryKey: ['clinic', 'usage', user?.id] });
       return created;
     },
     updatePatient: async (id, patient) => {
@@ -294,6 +295,8 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
         consultationId: response.consultationId,
       };
       setState((current) => ({ ...current, prescriptions: [created, ...current.prescriptions] }));
+      await queryClient.invalidateQueries({ queryKey: ['clinic', 'prescriptions', patientId] });
+      await queryClient.invalidateQueries({ queryKey: ['clinic', 'usage', user?.id] });
       return created;
     },
     addExam: (exam) => {
@@ -330,6 +333,8 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
             : [history, ...current.clinicalHistories],
         };
       });
+      await queryClient.invalidateQueries({ queryKey: ['clinic', 'consultations', patientId] });
+      await queryClient.invalidateQueries({ queryKey: ['clinic', 'usage', user?.id] });
       return created;
     },
     updateAppointmentStatus: (id, status) => {

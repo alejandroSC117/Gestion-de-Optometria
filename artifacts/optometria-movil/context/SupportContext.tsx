@@ -19,7 +19,7 @@ export type SupportTicket = {
 type SupportContextValue = {
   tickets: SupportTicket[];
   isHydrated: boolean;
-  createTicket: (ticket: Pick<SupportTicket, 'userId' | 'category' | 'description' | 'priority'>) => SupportTicket;
+  createTicket: (ticket: Pick<SupportTicket, 'category' | 'description' | 'priority'>) => SupportTicket;
 };
 
 const SupportContext = createContext<SupportContextValue | null>(null);

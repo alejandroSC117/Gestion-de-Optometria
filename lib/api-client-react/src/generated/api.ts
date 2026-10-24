@@ -31,7 +31,8 @@ import type {
   Prescription,
   PrescriptionInput,
   ProfessionalProfile,
-  ProfessionalProfileInput
+  ProfessionalProfileInput,
+  UsageSummary
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -204,6 +205,83 @@ export function useGetCurrentUser<TData = Awaited<ReturnType<typeof getCurrentUs
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetCurrentUserQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetUsageSummaryUrl = () => {
+
+
+
+
+  return `/api/usage`
+}
+
+/**
+ * @summary Get the authenticated account's server-enforced usage
+ */
+export const getUsageSummary = async ( options?: Parameters<typeof customFetch>[1]): Promise<UsageSummary> => {
+
+  return customFetch<UsageSummary>(getGetUsageSummaryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUsageSummaryQueryKey = () => {
+    return [
+    `/api/usage`
+    ] as const;
+    }
+
+
+export const getGetUsageSummaryQueryOptions = <TData = Awaited<ReturnType<typeof getUsageSummary>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUsageSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUsageSummaryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUsageSummary>>> = ({ signal }) => getUsageSummary({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsageSummary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUsageSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getUsageSummary>>>
+export type GetUsageSummaryQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the authenticated account's server-enforced usage
+ */
+
+export function useGetUsageSummary<TData = Awaited<ReturnType<typeof getUsageSummary>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUsageSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUsageSummaryQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

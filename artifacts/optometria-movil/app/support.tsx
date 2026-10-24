@@ -9,11 +9,11 @@ import { Field, PrimaryButton, Screen, TopBar } from '@/components/NexusUI';
 
 const faqs = [
   ['¿Cómo guardo una receta?', 'Abre Recetas desde Inicio o desde el expediente de un paciente y completa la graduación.'],
-  ['¿Dónde se almacenan mis datos?', 'Durante esta fase los datos se guardan localmente en el dispositivo para pruebas con pacientes ficticios.'],
+  ['¿Dónde se almacenan mis datos?', 'Los expedientes clínicos se guardan en Nexus. Los borradores de soporte de esta versión no se envían ni se guardan en el servidor.'],
   ['¿Cómo funcionan los límites?', 'El uso mensual aparece en Inicio y Ajustes. Al llegar al límite podrás revisar los planes disponibles.'],
 ];
 
-const statusLabels: Record<SupportStatus, string> = { open: 'Abierto', review: 'En revisión', in_progress: 'En proceso', resolved: 'Resuelto', closed: 'Cerrado' };
+const statusLabels: Record<SupportStatus, string> = { draft: 'Borrador local' };
 const priorityLabels: Record<SupportPriority, string> = { low: 'Baja', normal: 'Normal', high: 'Alta' };
 
 export default function SupportScreen() {
@@ -28,9 +28,10 @@ export default function SupportScreen() {
 
   function submit() {
     if (!description.trim()) return;
-    const ticket = createTicket({ userId: user?.id || 'demo-user', category, description: description.trim(), priority });
+    if (!user?.id) return;
+    const ticket = createTicket({ category, description: description.trim(), priority });
     setDescription('');
-    setSent(`Ticket ${ticket.id} creado correctamente.`);
+    setSent(`Se guardó ${ticket.id} solo en esta sesión. No se envió al equipo de soporte.`);
   }
 
   return (
@@ -39,7 +40,7 @@ export default function SupportScreen() {
       <View style={[styles.hero, { backgroundColor: colors.primary }]}>
         <View style={[styles.heroIcon, { backgroundColor: colors.accent }]}><Feather name="life-buoy" size={22} color={colors.primary} /></View>
         <Text style={styles.heroTitle}>Estamos para ayudarte</Text>
-        <Text style={styles.heroText}>Consulta respuestas rápidas o abre un ticket para el equipo de Nexus.</Text>
+        <Text style={styles.heroText}>Consulta respuestas rápidas. El formulario de reporte solo guarda un borrador local; todavía no se envía al equipo de soporte.</Text>
       </View>
       <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Centro de ayuda</Text>
       <View style={[styles.faqCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -50,10 +51,10 @@ export default function SupportScreen() {
       <View style={styles.chips}>{(['low', 'normal', 'high'] as SupportPriority[]).map((item) => <Pressable key={item} onPress={() => setPriority(item)} style={[styles.chip, { backgroundColor: priority === item ? colors.secondary : colors.card, borderColor: priority === item ? colors.primary : colors.border }]}><Text style={[styles.chipText, { color: priority === item ? colors.primary : colors.mutedForeground }]}>{priorityLabels[item]}</Text></Pressable>)}</View>
       <Field label="Descripción" value={description} onChangeText={setDescription} placeholder="Cuéntanos qué ocurrió..." multiline />
       {sent ? <Text style={[styles.success, { color: colors.primary }]}>{sent}</Text> : null}
-      <PrimaryButton label="Crear ticket" icon="send" onPress={submit} disabled={!description.trim()} />
-      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Mis tickets</Text>
+       <PrimaryButton label="Guardar borrador local" icon="file-text" onPress={submit} disabled={!description.trim() || !user?.id} />
+       <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Borradores de esta sesión</Text>
       {tickets.length ? tickets.map((ticket) => <View key={ticket.id} style={[styles.ticket, { backgroundColor: colors.card, borderColor: colors.border }]}><View style={styles.ticketTop}><Text style={[styles.ticketId, { color: colors.primary }]}>{ticket.id}</Text><Text style={[styles.ticketStatus, { color: colors.mutedForeground }]}>{statusLabels[ticket.status]}</Text></View><Text style={[styles.ticketCategory, { color: colors.foreground }]}>{ticket.category} · Prioridad {priorityLabels[ticket.priority]}</Text><Text style={[styles.ticketDescription, { color: colors.mutedForeground }]}>{ticket.description}</Text></View>) : <Text style={[styles.empty, { color: colors.mutedForeground }]}>Aún no has creado tickets.</Text>}
-      <Text style={[styles.footer, { color: colors.mutedForeground }]}>Contactar soporte y el panel administrativo se conectarán a un backend posteriormente.</Text>
+       <Text style={[styles.footer, { color: colors.mutedForeground }]}>No incluyas datos clínicos ni información sensible en este borrador: no se transmite ni se conserva al cerrar sesión.</Text>
     </Screen>
   );
 }

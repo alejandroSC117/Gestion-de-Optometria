@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
@@ -9,13 +9,24 @@ import { Field, PrimaryButton, Screen, TopBar } from '@/components/NexusUI';
 export default function ProfessionalProfileScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { profile, updateProfile } = useProfessionalProfile();
+  const { profile, updateProfile, isLoading } = useProfessionalProfile();
   const [form, setForm] = useState(profile);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => setForm(profile), [profile]);
   const set = (key: keyof typeof form) => (value: string) => setForm((current) => ({ ...current, [key]: value }));
 
-  function save() {
-    updateProfile(form);
-    router.back();
+  async function save() {
+    setSaving(true);
+    setError('');
+    try {
+      await updateProfile(form);
+      router.back();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'No se pudo guardar el perfil.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -53,7 +64,8 @@ export default function ProfessionalProfileScreen() {
         <View style={styles.futureCopy}><Text style={[styles.futureTitle, { color: colors.foreground }]}>Logotipo y firma digital</Text><Text style={[styles.futureText, { color: colors.mutedForeground }]}>Campos preparados para incorporar archivos en una siguiente fase.</Text></View>
         <Feather name="lock" size={16} color={colors.mutedForeground} />
       </View>
-      <PrimaryButton label="Guardar perfil profesional" icon="check" onPress={save} />
+      {error ? <Text style={[styles.sectionHint, { color: colors.destructive }]}>{error}</Text> : null}
+      <PrimaryButton label={saving ? 'Guardando…' : 'Guardar perfil profesional'} icon="check" onPress={save} disabled={saving || isLoading} />
     </Screen>
   );
 }

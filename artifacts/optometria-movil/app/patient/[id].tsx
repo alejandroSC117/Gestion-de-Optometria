@@ -2,24 +2,103 @@ import { useMemo } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
+import { listPatientConsultations, listPatientPrescriptions } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
-import { useClinic } from '@/context/ClinicContext';
+import { useClinic, type Exam, type Prescription } from '@/context/ClinicContext';
 import { EmptyState, PatientAvatar, PrimaryButton, Screen, SectionHeading, StatusPill, TopBar, UpgradeCard, formatDate } from '@/components/NexusUI';
 import { useSubscription } from '@/context/SubscriptionContext';
+import { useAuth } from '@/context/AuthContext';
+
+function record(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function textValue(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value : '—';
+}
+
+function numberValue(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
 
 export default function PatientDetailScreen() {
   const router = useRouter();
   const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getPatient, getPatientAppointments, getPatientPrescription, getPatientExams } = useClinic();
+  const { getPatient, getPatientAppointments, getPatientPrescription, getPatientExams, isHydrated } = useClinic();
   const { canAccess } = useSubscription();
+  const { user } = useAuth();
   const patient = getPatient(id ?? '');
   const appointments = useMemo(() => patient ? getPatientAppointments(patient.id) : [], [getPatientAppointments, patient]);
-  const exams = useMemo(() => patient ? getPatientExams(patient.id) : [], [getPatientExams, patient]);
-  const prescription = patient ? getPatientPrescription(patient.id) : undefined;
+  const examsInMemory = useMemo(() => patient ? getPatientExams(patient.id) : [], [getPatientExams, patient]);
+  const prescriptionInMemory = patient ? getPatientPrescription(patient.id) : undefined;
+  const prescriptionsQuery = useQuery({
+    queryKey: ['clinic', 'prescriptions', id],
+    queryFn: () => listPatientPrescriptions(id ?? ''),
+    enabled: Boolean(id && user?.id),
+    retry: false,
+  });
+  const consultationsQuery = useQuery({
+    queryKey: ['clinic', 'consultations', id],
+    queryFn: () => listPatientConsultations(id ?? ''),
+    enabled: Boolean(id && user?.id),
+    retry: false,
+  });
+  const remotePrescription = useMemo<Prescription | undefined>(() => {
+    const row = prescriptionsQuery.data?.[0];
+    if (!row) return undefined;
+    const data = record(row.prescriptionData);
+    return {
+      id: row.id,
+      patientId: row.patientId,
+      consultationId: row.consultationId,
+      issuedDate: row.issuedAt,
+      odSphere: numberValue(data.odSphere),
+      odCylinder: numberValue(data.odCylinder),
+      odAxis: numberValue(data.odAxis),
+      osSphere: numberValue(data.osSphere),
+      osCylinder: numberValue(data.osCylinder),
+      osAxis: numberValue(data.osAxis),
+      addPower: numberValue(data.addPower),
+      odAdd: numberValue(data.odAdd),
+      odPrism: typeof data.odPrism === 'string' ? data.odPrism : undefined,
+      osAdd: numberValue(data.osAdd),
+      osPrism: typeof data.osPrism === 'string' ? data.osPrism : undefined,
+      dp: typeof data.dp === 'string' ? data.dp : undefined,
+      height: typeof data.height === 'string' ? data.height : undefined,
+      observations: typeof data.observations === 'string' ? data.observations : undefined,
+      lensType: textValue(data.lensType),
+      provider: record(row.professionalSnapshot) as unknown as Prescription['provider'],
+    };
+  }, [prescriptionsQuery.data]);
+  const prescription = prescriptionInMemory ?? remotePrescription;
+  const remoteExams = useMemo<Exam[]>(() => (consultationsQuery.data ?? []).map((row, index) => {
+    const clinicalData = record(row.clinicalData);
+    const acuity = record(clinicalData.acuity);
+    const od = record(acuity.od);
+    const oi = record(acuity.oi);
+    const tests = record(clinicalData.tests);
+    return {
+      id: index,
+      patientId: row.patientId,
+      examDate: row.consultationDate,
+      visualAcuityRight: textValue(od.distanceCorrected),
+      visualAcuityLeft: textValue(oi.distanceCorrected),
+      intraocularPressureRight: textValue(tests.intraocularPressureRight),
+      intraocularPressureLeft: textValue(tests.intraocularPressureLeft),
+      observations: row.observations ?? '',
+    };
+  }), [consultationsQuery.data]);
+  const exams = examsInMemory.length ? examsInMemory : remoteExams;
 
   if (!canAccess('patientHistory')) {
     return <Screen><TopBar eyebrow="Expediente" title="Detalle" action={{ icon: 'x', label: 'Cerrar', onPress: () => router.back() }} /><UpgradeCard title="Historial avanzado es Pro" message="Actualiza a Nexus Pro para consultar perfiles, exámenes y recetas de tus pacientes." onPress={() => router.push('/plans')} /></Screen>;
+  }
+
+  if (!patient && !isHydrated) {
+    return <Screen><TopBar title="Paciente" action={{ icon: 'x', label: 'Cerrar', onPress: () => router.back() }} /><Text style={[styles.muted, { color: colors.mutedForeground }]}>Cargando expediente…</Text></Screen>;
   }
 
   if (!patient) {
@@ -34,6 +113,7 @@ export default function PatientDetailScreen() {
         <Text style={styles.profileName}>{patient.firstName} {patient.lastName}</Text>
         <Text style={styles.profileMeta}>{patient.email || 'Sin correo registrado'}</Text>
         <View style={styles.profileActions}>
+          <Pressable onPress={() => router.push({ pathname: '/patient/edit', params: { id: patient.id } })} style={styles.profileAction}><Feather name="edit-2" size={15} color={colors.primary} /><Text style={[styles.profileActionText, { color: colors.primary }]}>Editar</Text></Pressable>
           {patient.phone ? <Pressable onPress={() => Linking.openURL(`tel:${patient.phone}`)} style={styles.profileAction}><Feather name="phone" size={15} color={colors.primary} /><Text style={[styles.profileActionText, { color: colors.primary }]}>Llamar</Text></Pressable> : null}
           <Pressable onPress={() => router.push({ pathname: '/appointment/new', params: { patientId: String(patient.id) } })} style={styles.profileAction}><Feather name="calendar" size={15} color={colors.primary} /><Text style={[styles.profileActionText, { color: colors.primary }]}>Agendar</Text></Pressable>
         </View>
@@ -41,16 +121,17 @@ export default function PatientDetailScreen() {
       <View style={styles.quickInfo}>
         <View><Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>TELÉFONO</Text><Text style={[styles.infoValue, { color: colors.foreground }]}>{patient.phone || '—'}</Text></View>
         <View><Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>NACIMIENTO</Text><Text style={[styles.infoValue, { color: colors.foreground }]}>{patient.birthDate || '—'}</Text></View>
+        <View><Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>ÚLTIMA CONSULTA</Text><Text style={[styles.infoValue, { color: colors.foreground }]}>{consultationsQuery.data?.[0] ? formatDate(consultationsQuery.data[0].consultationDate) : '—'}</Text></View>
       </View>
       <SectionHeading title="Última graduación" action="Recetas" />
-      {prescription ? <View style={[styles.rxCard, { backgroundColor: colors.card, borderColor: colors.border }]}><View style={styles.rxHeader}><Feather name="file-text" size={17} color={colors.primary} /><Text style={[styles.rxDate, { color: colors.mutedForeground }]}> {formatDate(prescription.issuedDate)}</Text></View><View style={styles.rxRow}><Text style={[styles.rxEye, { color: colors.mutedForeground }]}>OD</Text><Text style={[styles.rxText, { color: colors.foreground }]}>{prescription.odSphere.toFixed(2)} · {prescription.odCylinder.toFixed(2)} · {prescription.odAxis}°</Text></View><View style={styles.rxRow}><Text style={[styles.rxEye, { color: colors.mutedForeground }]}>OI</Text><Text style={[styles.rxText, { color: colors.foreground }]}>{prescription.osSphere.toFixed(2)} · {prescription.osCylinder.toFixed(2)} · {prescription.osAxis}°</Text></View></View> : <EmptyState icon="file-text" title="Sin graduación" message="Registra una receta para verla aquí." />}
+      {prescription ? <View style={[styles.rxCard, { backgroundColor: colors.card, borderColor: colors.border }]}><View style={styles.rxHeader}><Feather name="file-text" size={17} color={colors.primary} /><Text style={[styles.rxDate, { color: colors.mutedForeground }]}> {formatDate(prescription.issuedDate)}</Text></View><View style={styles.rxRow}><Text style={[styles.rxEye, { color: colors.mutedForeground }]}>OD</Text><Text style={[styles.rxText, { color: colors.foreground }]}>{prescription.odSphere.toFixed(2)} · {prescription.odCylinder.toFixed(2)} · {prescription.odAxis}°</Text></View><View style={styles.rxRow}><Text style={[styles.rxEye, { color: colors.mutedForeground }]}>OI</Text><Text style={[styles.rxText, { color: colors.foreground }]}>{prescription.osSphere.toFixed(2)} · {prescription.osCylinder.toFixed(2)} · {prescription.osAxis}°</Text></View></View> : prescriptionsQuery.isLoading ? <Text style={[styles.muted, { color: colors.mutedForeground }]}>Cargando recetas…</Text> : <EmptyState icon="file-text" title="Sin graduación" message="Registra una receta para verla aquí." />}
        <SectionHeading title="Historia clínica" action="Ver historial" />
        <Pressable onPress={() => router.push({ pathname: '/clinical-history', params: { patientId: String(patient.id) } })} style={[styles.historyLink, { backgroundColor: colors.secondary, borderColor: colors.border }]}><Feather name="clipboard" size={17} color={colors.primary} /><Text style={[styles.historyLinkText, { color: colors.primary }]}>Ver consultas cronológicas</Text><Feather name="chevron-right" size={17} color={colors.primary} /></Pressable>
        <SectionHeading title="Exámenes" />
-      {exams.length ? exams.slice(0, 2).map((exam) => <View key={exam.id} style={[styles.examRow, { backgroundColor: colors.card, borderColor: colors.border }]}><View style={[styles.examBadge, { backgroundColor: colors.secondary }]}><Feather name="eye" size={16} color={colors.primary} /></View><View style={styles.examCopy}><Text style={[styles.examDate, { color: colors.foreground }]}>{formatDate(exam.examDate)} · Agudeza {exam.visualAcuityRight} / {exam.visualAcuityLeft}</Text><Text style={[styles.examNote, { color: colors.mutedForeground }]}>{exam.observations || 'Sin observaciones'}</Text></View></View>) : <Text style={[styles.muted, { color: colors.mutedForeground }]}>No hay exámenes registrados.</Text>}
+       {exams.length ? exams.slice(0, 2).map((exam) => <View key={exam.id} style={[styles.examRow, { backgroundColor: colors.card, borderColor: colors.border }]}><View style={[styles.examBadge, { backgroundColor: colors.secondary }]}><Feather name="eye" size={16} color={colors.primary} /></View><View style={styles.examCopy}><Text style={[styles.examDate, { color: colors.foreground }]}>{formatDate(exam.examDate)} · Agudeza {exam.visualAcuityRight} / {exam.visualAcuityLeft}</Text><Text style={[styles.examNote, { color: colors.mutedForeground }]}>{exam.observations || 'Sin observaciones registradas'}</Text></View></View>) : consultationsQuery.isLoading ? <Text style={[styles.muted, { color: colors.mutedForeground }]}>Cargando exámenes…</Text> : <Text style={[styles.muted, { color: colors.mutedForeground }]}>No hay exámenes registrados.</Text>}
       <SectionHeading title="Próximas citas" />
       {appointments.filter((appointment) => appointment.status !== 'completed' && appointment.status !== 'cancelled').slice(0, 2).map((appointment) => <View key={appointment.id} style={[styles.appointmentRow, { backgroundColor: colors.card, borderColor: colors.border }]}><View><Text style={[styles.appointmentDate, { color: colors.primary }]}>{formatDate(appointment.date)} · {appointment.time}</Text><Text style={[styles.appointmentNote, { color: colors.foreground }]}>{appointment.notes || 'Consulta programada'}</Text></View><StatusPill status={appointment.status} /></View>)}
-      <PrimaryButton label="Registrar examen visual" icon="eye" onPress={() => router.push('/tools/visual-exam')} />
+       <PrimaryButton label="Iniciar examen guiado" icon="eye" onPress={() => router.push({ pathname: '/exam/new', params: { patientId: patient.id } })} />
     </Screen>
   );
 }

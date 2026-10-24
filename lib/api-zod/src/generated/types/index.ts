@@ -28,3 +28,7 @@ export * from './prescriptionPrescriptionData';
 export * from './prescriptionProfessionalSnapshot';
 export * from './professionalProfile';
 export * from './professionalProfileInput';
+export * from './usageSummary';
+export * from './usageSummaryLimits';
+export * from './usageSummaryPlan';
+export * from './usageSummaryUsage';

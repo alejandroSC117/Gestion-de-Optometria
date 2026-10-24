@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useClinic } from '@/context/ClinicContext';
 import { useProfessionalProfile } from '@/context/ProfessionalProfileContext';
 import { useSubscription } from '@/context/SubscriptionContext';
-import { deleteClinicalDraft, getClinicalDraft, listPatientConsultations, listPatientPrescriptions, saveClinicalDraft } from '@workspace/api-client-react';
+import { deleteClinicalDraft, getClinicalDraft, listPatients, listPatientConsultations, listPatientPrescriptions, saveClinicalDraft } from '@workspace/api-client-react';
 import { EmptyState, Field, PrimaryButton, Screen, SecondaryButton, UpgradeCard, TopBar, formatDate } from '@/components/NexusUI';
 
 const steps = ['Paciente y consulta', 'Antecedentes', 'Agudeza visual', 'Refracción', 'Pruebas optométricas', 'Resultados', 'Receta relacionada', 'Revisión final'];
@@ -44,6 +44,12 @@ type ExamDraft = {
   rxOiSphere: string;
   rxOiCylinder: string;
   rxOiAxis: string;
+  rxOdAdd: string;
+  rxOiAdd: string;
+  rxOdPrism: string;
+  rxOiPrism: string;
+  rxHeight: string;
+  rxObservations: string;
   rxLensType: string;
 };
 
@@ -83,7 +89,7 @@ export default function NewExamScreen() {
   const [patientId, setPatientId] = useState(params.patientId ?? '');
   const [patientSearch, setPatientSearch] = useState('');
   const [examStarted, setExamStarted] = useState(Boolean(params.patientId));
-  const [draftReady, setDraftReady] = useState(false);
+  const [draftReadyUserId, setDraftReadyUserId] = useState<string | undefined>();
   const [draftStatus, setDraftStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [isSaving, setIsSaving] = useState(false);
   const [reason, setReason] = useState('');
@@ -108,16 +114,23 @@ export default function NewExamScreen() {
   const [rxOiSphere, setRxOiSphere] = useState('');
   const [rxOiCylinder, setRxOiCylinder] = useState('');
   const [rxOiAxis, setRxOiAxis] = useState('');
+  const [rxOdAdd, setRxOdAdd] = useState('');
+  const [rxOiAdd, setRxOiAdd] = useState('');
+  const [rxOdPrism, setRxOdPrism] = useState('');
+  const [rxOiPrism, setRxOiPrism] = useState('');
+  const [rxHeight, setRxHeight] = useState('');
+  const [rxObservations, setRxObservations] = useState('');
   const [rxLensType, setRxLensType] = useState('');
   const [error, setError] = useState('');
-  const selectedPatient = patients.find((patient) => patient.id === patientId);
-  const filteredPatients = useMemo(() => {
-    const query = patientSearch.trim().toLocaleLowerCase();
-    const matches = query
-      ? patients.filter((patient) => `${patient.firstName} ${patient.lastName} ${patient.phone} ${patient.email}`.toLocaleLowerCase().includes(query))
-      : patients;
-    return matches.slice(0, 6);
-  }, [patientSearch, patients]);
+  const draftReady = Boolean(user?.id && draftReadyUserId === user.id);
+  const patientSearchQuery = useQuery({
+    queryKey: ['clinic', 'patient-search', patientSearch.trim().toLocaleLowerCase()],
+    queryFn: () => listPatients({ q: patientSearch.trim() }),
+    enabled: Boolean(user?.id && patientSearch.trim().length >= 2),
+    retry: false,
+  });
+  const filteredPatients = useMemo(() => (patientSearch.trim().length >= 2 ? patientSearchQuery.data ?? [] : []).slice(0, 6), [patientSearch, patientSearchQuery.data]);
+  const selectedPatient = patients.find((patient) => patient.id === patientId) ?? filteredPatients.find((patient) => patient.id === patientId);
   const recentConsultations = useQuery({
     queryKey: ['clinic', 'consultations', patientId],
     queryFn: () => listPatientConsultations(patientId),
@@ -132,7 +145,7 @@ export default function NewExamScreen() {
   });
 
   useEffect(() => {
-    if (draftQuery.isLoading) return;
+    if (!user?.id || draftQuery.isLoading || (!draftQuery.isSuccess && !draftQuery.isError)) return;
     const saved = draftQuery.data?.draftData;
     if (saved && typeof saved === 'object') {
       const draft = saved as Partial<ExamDraft>;
@@ -161,6 +174,12 @@ export default function NewExamScreen() {
       if (typeof draft.rxOiSphere === 'string') setRxOiSphere(draft.rxOiSphere);
       if (typeof draft.rxOiCylinder === 'string') setRxOiCylinder(draft.rxOiCylinder);
       if (typeof draft.rxOiAxis === 'string') setRxOiAxis(draft.rxOiAxis);
+      if (typeof draft.rxOdAdd === 'string') setRxOdAdd(draft.rxOdAdd);
+      if (typeof draft.rxOiAdd === 'string') setRxOiAdd(draft.rxOiAdd);
+      if (typeof draft.rxOdPrism === 'string') setRxOdPrism(draft.rxOdPrism);
+      if (typeof draft.rxOiPrism === 'string') setRxOiPrism(draft.rxOiPrism);
+      if (typeof draft.rxHeight === 'string') setRxHeight(draft.rxHeight);
+      if (typeof draft.rxObservations === 'string') setRxObservations(draft.rxObservations);
       if (typeof draft.rxLensType === 'string') setRxLensType(draft.rxLensType);
       setDraftStatus('saved');
     } else if (params.patientId) {
@@ -168,15 +187,16 @@ export default function NewExamScreen() {
       setExamStarted(true);
     }
     if (draftQuery.isError) setDraftStatus('error');
-    setDraftReady(true);
-  }, [draftQuery.data, draftQuery.isError, draftQuery.isLoading, params.patientId]);
+    setDraftReadyUserId(user.id);
+  }, [draftQuery.data, draftQuery.isError, draftQuery.isLoading, draftQuery.isSuccess, params.patientId, user?.id]);
 
   const draftData = useMemo<ExamDraft>(() => ({
     step, examStarted, patientId, reason, date, time, generalObservations, antecedents,
     scale, odAcuity, oiAcuity, aoAcuity, odRefraction, oiRefraction, vertexDistance, dp,
     refractionObservations, tests, results, rxOdSphere, rxOdCylinder, rxOdAxis,
-    rxOiSphere, rxOiCylinder, rxOiAxis, rxLensType,
-  }), [step, examStarted, patientId, reason, date, time, generalObservations, antecedents, scale, odAcuity, oiAcuity, aoAcuity, odRefraction, oiRefraction, vertexDistance, dp, refractionObservations, tests, results, rxOdSphere, rxOdCylinder, rxOdAxis, rxOiSphere, rxOiCylinder, rxOiAxis, rxLensType]);
+    rxOiSphere, rxOiCylinder, rxOiAxis, rxOdAdd, rxOiAdd, rxOdPrism, rxOiPrism,
+    rxHeight, rxObservations, rxLensType,
+  }), [step, examStarted, patientId, reason, date, time, generalObservations, antecedents, scale, odAcuity, oiAcuity, aoAcuity, odRefraction, oiRefraction, vertexDistance, dp, refractionObservations, tests, results, rxOdSphere, rxOdCylinder, rxOdAxis, rxOiSphere, rxOiCylinder, rxOiAxis, rxOdAdd, rxOiAdd, rxOdPrism, rxOiPrism, rxHeight, rxObservations, rxLensType]);
 
   useEffect(() => {
     if (!draftReady || !user?.id || isSaving) return;
@@ -205,43 +225,32 @@ export default function NewExamScreen() {
       setStep(0);
       return;
     }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    if (!isValidDate(date)) {
       setError('Usa el formato AAAA-MM-DD para la fecha de consulta.');
       setStep(0);
+      return;
+    }
+    const hasPrescription = [rxOdSphere, rxOdCylinder, rxOdAxis, rxOiSphere, rxOiCylinder, rxOiAxis, rxOdAdd, rxOiAdd, rxOdPrism, rxOiPrism, rxHeight, rxObservations, rxLensType].some((value) => value.trim());
+    const numericRecipeFields = [
+      ['esfera OD', rxOdSphere], ['cilindro OD', rxOdCylinder], ['eje OD', rxOdAxis], ['adición OD', rxOdAdd],
+      ['esfera OI', rxOiSphere], ['cilindro OI', rxOiCylinder], ['eje OI', rxOiAxis], ['adición OI', rxOiAdd],
+    ] as const;
+    const invalidNumericField = numericRecipeFields.find(([, value]) => value.trim() && !Number.isFinite(Number(value)));
+    if (hasPrescription && invalidNumericField) {
+      setError(`El campo ${invalidNumericField[0]} debe ser numérico.`);
+      setStep(6);
+      return;
+    }
+    const invalidAxis = [rxOdAxis, rxOiAxis].some((value) => value.trim() && (!Number.isInteger(Number(value)) || Number(value) < 0 || Number(value) > 180));
+    if (hasPrescription && invalidAxis) {
+      setError('El eje debe ser un número entero entre 0 y 180 grados.');
+      setStep(6);
       return;
     }
     setIsSaving(true);
     setError('');
     try {
-      let prescriptionId: string | undefined;
-      const hasPrescription = [rxOdSphere, rxOdCylinder, rxOdAxis, rxOiSphere, rxOiCylinder, rxOiAxis, rxLensType].some((value) => value.trim());
-      if (hasPrescription) {
-        const createdPrescription = await addPrescription({
-          patientId,
-          issuedDate: date,
-          odSphere: Number(rxOdSphere) || 0,
-          odCylinder: Number(rxOdCylinder) || 0,
-          odAxis: Number(rxOdAxis) || 0,
-          osSphere: Number(rxOiSphere) || 0,
-          osCylinder: Number(rxOiCylinder) || 0,
-          osAxis: Number(rxOiAxis) || 0,
-          addPower: 0,
-          lensType: rxLensType || 'Pendiente de especificar',
-          provider: {
-            displayName: profile.prescriptionName || `${profile.firstName} ${profile.lastName}`.trim(),
-            professionalName: profile.prescriptionProfessionalName || profile.profession,
-            licenseNumber: profile.prescriptionLicense || profile.licenseNumber,
-            officeName: profile.officeName,
-            address: profile.prescriptionAddress || profile.officeAddress,
-            phone: profile.prescriptionPhone || profile.officePhone,
-            email: profile.prescriptionEmail || profile.officeEmail || profile.email,
-            logoUri: profile.logoUri,
-            signatureUri: profile.signatureUri,
-          },
-        });
-        prescriptionId = createdPrescription.id;
-      }
-      await addConsultation(patientId, {
+      const savedConsultation = await addConsultation(patientId, {
         date,
         time,
         reason,
@@ -252,13 +261,51 @@ export default function NewExamScreen() {
         refraction: { od: odRefraction, oi: oiRefraction, vertexDistance, dp, observations: refractionObservations },
         tests,
         results,
-        prescriptionId,
       });
       try {
         await deleteClinicalDraft();
         queryClient.setQueryData(['clinic', 'clinical-draft', user?.id], null);
       } catch {
         setDraftStatus('error');
+      }
+      if (hasPrescription) {
+        try {
+          await addPrescription({
+            patientId,
+            consultationId: savedConsultation.id,
+            issuedDate: date,
+            odSphere: Number(rxOdSphere) || 0,
+            odCylinder: Number(rxOdCylinder) || 0,
+            odAxis: Number(rxOdAxis) || 0,
+            osSphere: Number(rxOiSphere) || 0,
+            osCylinder: Number(rxOiCylinder) || 0,
+            osAxis: Number(rxOiAxis) || 0,
+            addPower: Number(rxOdAdd || rxOiAdd) || 0,
+            odAdd: rxOdAdd.trim() ? Number(rxOdAdd) : undefined,
+            osAdd: rxOiAdd.trim() ? Number(rxOiAdd) : undefined,
+            odPrism: rxOdPrism.trim() || undefined,
+            osPrism: rxOiPrism.trim() || undefined,
+            dp: dp.trim() || undefined,
+            height: rxHeight.trim() || undefined,
+            observations: rxObservations.trim() || undefined,
+            lensType: rxLensType || 'Pendiente de especificar',
+            provider: {
+              displayName: profile.prescriptionName || `${profile.firstName} ${profile.lastName}`.trim(),
+              professionalName: profile.prescriptionProfessionalName || profile.profession,
+              licenseNumber: profile.prescriptionLicense || profile.licenseNumber,
+              officeName: profile.officeName,
+              address: profile.prescriptionAddress || profile.officeAddress,
+              phone: profile.prescriptionPhone || profile.officePhone,
+              email: profile.prescriptionEmail || profile.officeEmail || profile.email,
+              logoUri: profile.logoUri,
+              signatureUri: profile.signatureUri,
+            },
+          });
+        } catch (prescriptionError) {
+          setError(`La consulta quedó guardada, pero no se pudo guardar la receta: ${prescriptionError instanceof Error ? prescriptionError.message : 'error desconocido'}`);
+          router.replace({ pathname: '/patient/[id]', params: { id: patientId } });
+          return;
+        }
       }
       router.replace({ pathname: '/patient/[id]', params: { id: patientId } });
     } catch (saveError) {
@@ -277,7 +324,8 @@ export default function NewExamScreen() {
   }
 
   function renderStep() {
-    if (step === 0 && !examStarted) return <><Text style={[styles.stepIntro, { color: colors.mutedForeground }]}>Busca y selecciona al paciente antes de iniciar la consulta.</Text><Field label="Buscar paciente" value={patientSearch} onChangeText={setPatientSearch} placeholder="Nombre, teléfono o correo" /><View style={styles.patientGrid}>{filteredPatients.map((patient) => <Pressable key={patient.id} onPress={() => setPatientId(patient.id)} style={[styles.patientChoice, { backgroundColor: patientId === patient.id ? colors.secondary : colors.card, borderColor: patientId === patient.id ? colors.primary : colors.border }]}><Text style={[styles.patientName, { color: patientId === patient.id ? colors.primary : colors.foreground }]}>{patient.firstName} {patient.lastName}</Text><Text style={[styles.patientMeta, { color: colors.mutedForeground }]}>{patient.phone || patient.email || 'Sin dato de contacto'}</Text></Pressable>)}</View>{filteredPatients.length === 0 ? <EmptyState icon="search" title="Sin resultados" message="Prueba otra búsqueda o registra un paciente nuevo." /> : null}{selectedPatient ? <View style={[styles.patientSummary, { backgroundColor: colors.card, borderColor: colors.border }]}><Text style={[styles.patientName, { color: colors.foreground }]}>{selectedPatient.firstName} {selectedPatient.lastName}</Text><Text style={[styles.patientMeta, { color: colors.mutedForeground }]}>Última consulta: {recentConsultations.data?.[0] ? formatDate(recentConsultations.data[0].consultationDate) : 'Sin consultas registradas'}</Text><Text style={[styles.patientMeta, { color: colors.mutedForeground }]}>Última receta: {recentPrescriptions.data?.[0] ? formatDate(recentPrescriptions.data[0].issuedAt) : 'Sin recetas registradas'}</Text></View> : null}<View style={styles.actions}><View style={styles.actionHalf}><SecondaryButton label="Nuevo paciente" icon="user-plus" onPress={() => router.push({ pathname: '/patient/new', params: { fromExam: '1' } })} /></View><View style={styles.actionHalf}><PrimaryButton label="Iniciar examen" icon="eye" onPress={() => { if (!patientId) setError('Selecciona un paciente o crea uno nuevo.'); else { setError(''); setExamStarted(true); } }} disabled={!patientId} /></View></View></>;
+    const hasPrescriptionDraft = [rxOdSphere, rxOdCylinder, rxOdAxis, rxOiSphere, rxOiCylinder, rxOiAxis, rxOdAdd, rxOiAdd, rxOdPrism, rxOiPrism, rxHeight, rxObservations, rxLensType].some(Boolean);
+    if (step === 0 && !examStarted) return <><Text style={[styles.stepIntro, { color: colors.mutedForeground }]}>Busca y selecciona al paciente antes de iniciar la consulta.</Text><Field label="Buscar paciente" value={patientSearch} onChangeText={(value) => { setPatientSearch(value); setError(''); }} placeholder="Nombre, teléfono o correo" />{patientSearch.trim().length < 2 ? <Text style={[styles.patientMeta, { color: colors.mutedForeground }]}>Escribe al menos dos caracteres para buscar en tus pacientes.</Text> : null}{patientSearchQuery.isLoading ? <Text style={[styles.patientMeta, { color: colors.mutedForeground }]}>Buscando…</Text> : null}{patientSearchQuery.isError ? <Text style={[styles.error, { color: colors.destructive }]}>No se pudo buscar. Revisa tu conexión e inténtalo de nuevo.</Text> : null}<View style={styles.patientGrid}>{filteredPatients.map((patient) => <Pressable key={patient.id} onPress={() => { setPatientId(patient.id); setError(''); }} style={[styles.patientChoice, { backgroundColor: patientId === patient.id ? colors.secondary : colors.card, borderColor: patientId === patient.id ? colors.primary : colors.border }]}><Text style={[styles.patientName, { color: patientId === patient.id ? colors.primary : colors.foreground }]}>{patient.firstName} {patient.lastName}</Text><Text style={[styles.patientMeta, { color: colors.mutedForeground }]}>{patient.phone || patient.email || 'Sin dato de contacto'}</Text></Pressable>)}</View>{patientSearch.trim().length >= 2 && !patientSearchQuery.isLoading && !patientSearchQuery.isError && filteredPatients.length === 0 ? <EmptyState icon="search" title="Sin resultados" message="Prueba otra búsqueda o registra un paciente nuevo." /> : null}{selectedPatient ? <View style={[styles.patientSummary, { backgroundColor: colors.card, borderColor: colors.border }]}><Text style={[styles.patientName, { color: colors.foreground }]}>{selectedPatient.firstName} {selectedPatient.lastName}</Text><Text style={[styles.patientMeta, { color: colors.mutedForeground }]}>Última consulta: {recentConsultations.data?.[0] ? formatDate(recentConsultations.data[0].consultationDate) : 'Sin consultas registradas'}</Text><Text style={[styles.patientMeta, { color: colors.mutedForeground }]}>Última receta: {recentPrescriptions.data?.[0] ? formatDate(recentPrescriptions.data[0].issuedAt) : 'Sin recetas registradas'}</Text></View> : null}<View style={styles.actions}><View style={styles.actionHalf}><SecondaryButton label="Registrar paciente nuevo" icon="user-plus" onPress={() => router.push({ pathname: '/patient/new', params: { fromExam: '1' } })} /></View><View style={styles.actionHalf}><PrimaryButton label="Iniciar examen" icon="eye" onPress={() => { if (!patientId) setError('Selecciona un paciente o crea uno nuevo.'); else { setError(''); setExamStarted(true); } }} disabled={!patientId} /></View></View></>;
     if (step === 0) return <><View style={[styles.patientSummary, { backgroundColor: colors.card, borderColor: colors.border }]}><Text style={[styles.patientName, { color: colors.foreground }]}>{selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : 'Paciente seleccionado'}</Text><Text style={[styles.patientMeta, { color: colors.mutedForeground }]}>La historia y la consulta se guardarán asociadas a este paciente.</Text><Pressable onPress={() => setExamStarted(false)}><Text style={[styles.changePatient, { color: colors.primary }]}>Cambiar paciente</Text></Pressable></View><Field label="Motivo de consulta" value={reason} onChangeText={setReason} placeholder="¿Por qué consulta hoy?" multiline /><View style={styles.twoColumns}><View style={styles.column}><Field label="Fecha" value={date} onChangeText={setDate} placeholder="AAAA-MM-DD" /></View><View style={styles.column}><Field label="Hora" value={time} onChangeText={setTime} placeholder="HH:MM" /></View></View><Field label="Observaciones generales" value={generalObservations} onChangeText={setGeneralObservations} placeholder="Notas de la consulta..." multiline /></>;
     if (step === 1) return <><Text style={[styles.stepIntro, { color: colors.mutedForeground }]}>Registra antecedentes sin establecer criterios diagnósticos.</Text><Field label="Antecedentes oculares" value={antecedents.ocular} onChangeText={updateAntecedent('ocular')} multiline /><Field label="Antecedentes personales relevantes" value={antecedents.personal} onChangeText={updateAntecedent('personal')} multiline /><Field label="Antecedentes familiares relevantes" value={antecedents.family} onChangeText={updateAntecedent('family')} multiline /><Field label="Cirugías oculares" value={antecedents.surgeries} onChangeText={updateAntecedent('surgeries')} multiline /><Field label="Uso de lentes" value={antecedents.glasses} onChangeText={updateAntecedent('glasses')} /><Field label="Uso de lentes de contacto" value={antecedents.contactLenses} onChangeText={updateAntecedent('contactLenses')} /><Field label="Medicamentos relevantes" value={antecedents.medications} onChangeText={updateAntecedent('medications')} multiline /><Field label="Alergias relevantes" value={antecedents.allergies} onChangeText={updateAntecedent('allergies')} multiline /></>;
     if (step === 2) return <><Text style={[styles.stepIntro, { color: colors.mutedForeground }]}>La escala queda guardada junto con cada consulta para permitir futuras conversiones.</Text><Field label="Escala de agudeza visual" value={scale} onChangeText={setScale} placeholder="Snellen, decimal u otra escala" />{renderAcuityFields('OD · Derecho', odAcuity, setOdAcuity)}{renderAcuityFields('OI · Izquierdo', oiAcuity, setOiAcuity)}{renderAcuityFields('AO · Ambos ojos', aoAcuity, setAoAcuity)}</>;

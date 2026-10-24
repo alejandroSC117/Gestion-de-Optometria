@@ -1,5 +1,5 @@
 export type PlanId = 'free' | 'pro' | 'clinic';
-export type UsageFeature = 'transposition' | 'calculator' | 'assistant' | 'patients' | 'exams';
+export type UsageFeature = 'transposition' | 'calculator' | 'assistant' | 'patients' | 'exams' | 'prescriptions';
 export type AppFeature = UsageFeature | 'visualExam' | 'patientHistory' | 'prescriptions';
 
 export type PlanDefinition = {
@@ -17,6 +17,7 @@ export const USAGE_LIMITS: Record<UsageFeature, number> = {
   assistant: 10,
   patients: 10,
   exams: 5,
+  prescriptions: 10,
 };
 
 export const PLAN_DEFINITIONS: Record<PlanId, PlanDefinition> = {
@@ -50,7 +51,8 @@ export const PLAN_ORDER: PlanId[] = ['free', 'pro', 'clinic'];
 
 export function planAllows(plan: PlanId, feature: AppFeature) {
   if (plan === 'clinic' || plan === 'pro') return true;
-  return feature === 'transposition' || feature === 'calculator' || feature === 'assistant';
+  // Free users can use core clinical features within server-enforced quotas.
+  return true;
 }
 
 export function planLabel(plan: PlanId) {

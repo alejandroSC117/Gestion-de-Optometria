@@ -72,14 +72,15 @@ export function ProfessionalProfileProvider({ children }: { children: React.Reac
 
   useEffect(() => {
     if (!profileQuery.data) return;
+    const nameParts = (user?.name ?? '').trim().split(/\s+/).filter(Boolean);
     setProfile({
       ...emptyProfessionalProfile,
       ...profileQuery.data,
-      firstName: profileQuery.data.firstName || user?.firstName || '',
-      lastName: profileQuery.data.lastName || user?.lastName || '',
+      firstName: profileQuery.data.firstName || nameParts[0] || '',
+      lastName: profileQuery.data.lastName || nameParts.slice(1).join(' '),
       email: profileQuery.data.email || user?.email || '',
     });
-  }, [profileQuery.data, user?.email, user?.firstName, user?.lastName]);
+  }, [profileQuery.data, user?.email, user?.name]);
 
   const value = useMemo(() => ({
     profile,

@@ -9,6 +9,41 @@ export interface HealthStatus {
   status: string;
 }
 
+export type UsageSummaryPlan = typeof UsageSummaryPlan[keyof typeof UsageSummaryPlan];
+
+
+export const UsageSummaryPlan = {
+  free: 'free',
+  pro: 'pro',
+  clinic: 'clinic',
+} as const;
+
+export type UsageSummaryUsage = {
+  /** @minimum 0 */
+  patients: number;
+  /** @minimum 0 */
+  exams: number;
+  /** @minimum 0 */
+  prescriptions: number;
+};
+
+export type UsageSummaryLimits = {
+  /** @minimum 0 */
+  patients: number;
+  /** @minimum 0 */
+  exams: number;
+  /** @minimum 0 */
+  prescriptions: number;
+};
+
+export interface UsageSummary {
+  plan: UsageSummaryPlan;
+  /** @pattern ^\d{4}-\d{2}$ */
+  month: string;
+  usage: UsageSummaryUsage;
+  limits: UsageSummaryLimits;
+}
+
 export interface ProfessionalProfile {
   firstName: string;
   lastName: string;

@@ -40,6 +40,20 @@ paths:
                 $ref: "#/components/schemas/ProfessionalProfile"
         "401":
           description: Authentication required
+  /usage:
+    get:
+      operationId: getUsageSummary
+      tags: [clinic]
+      summary: Get the authenticated account's server-enforced usage
+      responses:
+        "200":
+          description: Current plan limits and monthly usage
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsageSummary"
+        "401":
+          description: Authentication required
   /professional-profile:
     put:
       operationId: updateProfessionalProfile
@@ -279,6 +293,30 @@ components:
           type: string
       required:
         - status
+    UsageSummary:
+      type: object
+      required: [plan, month, usage, limits]
+      properties:
+        plan:
+          type: string
+          enum: [free, pro, clinic]
+        month:
+          type: string
+          pattern: "^\\d{4}-\\d{2}$"
+        usage:
+          type: object
+          required: [patients, exams, prescriptions]
+          properties:
+            patients: { type: integer, minimum: 0 }
+            exams: { type: integer, minimum: 0 }
+            prescriptions: { type: integer, minimum: 0 }
+        limits:
+          type: object
+          required: [patients, exams, prescriptions]
+          properties:
+            patients: { type: integer, minimum: 0 }
+            exams: { type: integer, minimum: 0 }
+            prescriptions: { type: integer, minimum: 0 }
     ProfessionalProfile:
       type: object
       required: [firstName, lastName, email, profession, licenseNumber, specialty, country, officeName, officeAddress, officePhone, officeEmail, prescriptionName, prescriptionProfessionalName, prescriptionLicense, prescriptionPhone, prescriptionEmail, prescriptionAddress]

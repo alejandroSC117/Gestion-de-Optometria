@@ -275,7 +275,7 @@ export function PlanBadge({ plan }: { plan: PlanId }) {
 export function UsageProgress({ feature, used, limit }: { feature: UsageFeature; used: number; limit: number }) {
   const colors = useColors();
   const percentage = Math.min(100, (used / Math.max(limit, 1)) * 100);
-  const labels: Record<UsageFeature, string> = { transposition: 'Transposición', calculator: 'Calculadoras', assistant: 'Nexus AI', patients: 'Pacientes', exams: 'Exámenes' };
+  const labels: Record<UsageFeature, string> = { transposition: 'Transposición', calculator: 'Calculadoras', assistant: 'Nexus AI', patients: 'Pacientes', exams: 'Exámenes', prescriptions: 'Recetas' };
   return (
     <View style={styles.usageProgress}>
       <View style={styles.usageHeader}><Text style={[styles.usageLabel, { color: colors.foreground }]}>{labels[feature]}</Text><Text style={[styles.usageCount, { color: colors.mutedForeground }]}>{used} de {limit}</Text></View>

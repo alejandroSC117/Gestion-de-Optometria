@@ -12,9 +12,16 @@ export default function PlansScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user } = useAuth();
-  const { plan: currentPlan, selectPlan } = useSubscription();
+  const { plan: currentPlan } = useSubscription();
   const [selected, setSelected] = useState<PlanId>(currentPlan);
-  const choose = () => { selectPlan(selected); router.replace('/(tabs)'); };
+  const [notice, setNotice] = useState('');
+  const choose = () => {
+    if (selected !== 'free') {
+      setNotice('La activación y el cobro de planes Pro y Clinic todavía no están configurados. No se ha cambiado tu plan.');
+      return;
+    }
+    router.replace('/(tabs)');
+  };
 
   return (
     <Screen>
@@ -33,8 +40,9 @@ export default function PlansScreen() {
           </Pressable>
         );
       })}
-      <PrimaryButton label={selected === 'free' ? 'Continuar con Free' : selected === 'pro' ? 'Elegir Pro' : 'Elegir Clinic'} icon="arrow-right" onPress={choose} />
-      <Text style={[styles.note, { color: colors.mutedForeground }]}>Los precios son configurables. Los pagos de App Store y Google Play se integrarán posteriormente.</Text>
+      {notice ? <Text style={[styles.note, { color: colors.destructive }]}>{notice}</Text> : null}
+      <PrimaryButton label={selected === 'free' ? 'Continuar con Free' : 'Pagos no configurados'} icon="arrow-right" onPress={choose} disabled={selected !== 'free'} />
+      <Text style={[styles.note, { color: colors.mutedForeground }]}>Los precios son configurables. Pro y Clinic son informativos hasta conectar un proveedor de pagos y activar suscripciones en el servidor.</Text>
     </Screen>
   );
 }

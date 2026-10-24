@@ -44,6 +44,40 @@ export const GetCurrentUserResponse = zod.object({
 
 
 /**
+ * @summary Get the authenticated account's server-enforced usage
+ */
+export const getUsageSummaryResponseMonthRegExp = new RegExp('^\\d{4}-\\d{2}$');
+export const getUsageSummaryResponseUsagePatientsMin = 0;
+
+export const getUsageSummaryResponseUsageExamsMin = 0;
+
+export const getUsageSummaryResponseUsagePrescriptionsMin = 0;
+
+export const getUsageSummaryResponseLimitsPatientsMin = 0;
+
+export const getUsageSummaryResponseLimitsExamsMin = 0;
+
+export const getUsageSummaryResponseLimitsPrescriptionsMin = 0;
+
+
+
+export const GetUsageSummaryResponse = zod.object({
+  "plan": zod.enum(['free', 'pro', 'clinic']),
+  "month": zod.string().regex(getUsageSummaryResponseMonthRegExp),
+  "usage": zod.object({
+  "patients": zod.number().int().min(getUsageSummaryResponseUsagePatientsMin),
+  "exams": zod.number().int().min(getUsageSummaryResponseUsageExamsMin),
+  "prescriptions": zod.number().int().min(getUsageSummaryResponseUsagePrescriptionsMin)
+}),
+  "limits": zod.object({
+  "patients": zod.number().int().min(getUsageSummaryResponseLimitsPatientsMin),
+  "exams": zod.number().int().min(getUsageSummaryResponseLimitsExamsMin),
+  "prescriptions": zod.number().int().min(getUsageSummaryResponseLimitsPrescriptionsMin)
+})
+})
+
+
+/**
  * @summary Save the authenticated professional profile
  */
 export const UpdateProfessionalProfileBody = zod.object({

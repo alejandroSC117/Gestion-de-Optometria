@@ -45,7 +45,7 @@ import {
 import { authenticatedUserId, requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
-const FREE_LIMITS = { patients: 10, exams: 5 };
+const FREE_LIMITS = { patients: 10, exams: 5, prescriptions: 10 };
 type LimitFeature = keyof typeof FREE_LIMITS;
 
 function monthInClinicTimezone() {
@@ -66,7 +66,11 @@ function dateOnly(value: unknown): string | null {
     if (Number.isNaN(value.getTime())) return null;
     return value.toISOString().slice(0, 10);
   }
-  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-").map(Number);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    if (parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day) return value;
+  }
   return null;
 }
 
@@ -196,6 +200,48 @@ router.get("/me", async (req, res) => {
     prescriptionAddress: profile?.prescriptionAddress ?? "",
     ...(profile?.logoUri ? { logoUri: profile.logoUri } : {}),
     ...(profile?.signatureUri ? { signatureUri: profile.signatureUri } : {}),
+  });
+});
+
+router.get("/usage", async (req, res) => {
+  const userId = authenticatedUserId(req);
+  const month = monthInClinicTimezone();
+  const accountKey = `user:${userId}`;
+  const [activePlan] = await db.select({ name: plans.name, limits: plans.limits })
+    .from(subscriptions)
+    .innerJoin(plans, eq(subscriptions.planId, plans.id))
+    .where(and(
+      eq(subscriptions.userId, userId),
+      isNull(subscriptions.organizationId),
+      eq(subscriptions.status, "active"),
+      eq(plans.active, true),
+      or(isNull(subscriptions.currentPeriodEnd), gte(subscriptions.currentPeriodEnd, new Date())),
+    ))
+    .orderBy(desc(subscriptions.updatedAt))
+    .limit(1);
+  const planName = activePlan?.name.toLowerCase() ?? "";
+  const plan = planName.includes("clinic") ? "clinic" : planName.includes("pro") ? "pro" : "free";
+  const rows = await db.select({
+    feature: usageCounters.feature,
+    used: usageCounters.used,
+  }).from(usageCounters).where(and(
+    eq(usageCounters.accountKey, accountKey),
+    eq(usageCounters.usageMonth, month),
+  ));
+  const usage = Object.fromEntries(rows.map((row) => [row.feature, row.used]));
+  return res.json({
+    plan,
+    month,
+    usage: {
+      patients: usage.patients ?? 0,
+      exams: usage.exams ?? 0,
+      prescriptions: usage.prescriptions ?? 0,
+    },
+    limits: {
+      patients: await getFeatureLimit(userId, null, "patients"),
+      exams: await getFeatureLimit(userId, null, "exams"),
+      prescriptions: await getFeatureLimit(userId, null, "prescriptions"),
+    },
   });
 });
 
@@ -382,6 +428,8 @@ router.post("/patients/:patientId/consultations", async (req, res) => {
   const organizationId = visible.patient.organizationId;
   const limit = await getFeatureLimit(userId, organizationId, "exams");
   const input = body.data;
+  const consultationDate = dateOnly(input.consultationDate);
+  if (!consultationDate) return res.status(400).json({ error: "Consultation date must be a valid YYYY-MM-DD date" });
   const created = await db.transaction(async (tx) => {
     await tx.insert(userProfiles).values({ id: userId }).onConflictDoNothing();
     const allowed = await consumeMonthlyUsage(tx, userId, organizationId, "exams", limit);
@@ -403,7 +451,7 @@ router.post("/patients/:patientId/consultations", async (req, res) => {
       patientId: visible.patient.id,
       professionalId: userId,
       organizationId,
-      consultationDate: dateOnly(input.consultationDate) ?? monthInClinicTimezone() + "-01",
+      consultationDate,
       consultationTime: input.consultationTime || null,
       reason: input.reason?.trim() || null,
       observations: input.observations?.trim() || null,
@@ -461,15 +509,24 @@ router.post("/patients/:patientId/prescriptions", async (req, res) => {
     if (!consultation) return res.status(400).json({ error: "Consultation does not belong to this patient" });
   }
 
-  const [created] = await db.insert(prescriptions).values({
-    patientId: visible.patient.id,
-    consultationId: body.data.consultationId ?? null,
-    professionalId: userId,
-    organizationId: visible.patient.organizationId,
-    issuedAt: dateOnly(body.data.issuedAt) ?? new Date().toISOString().slice(0, 10),
-    prescriptionData: body.data.prescriptionData,
-    professionalSnapshot: body.data.professionalSnapshot,
-  }).returning();
+  const issuedAt = dateOnly(body.data.issuedAt);
+  if (!issuedAt) return res.status(400).json({ error: "Prescription date must be a valid YYYY-MM-DD date" });
+  const limit = await getFeatureLimit(userId, visible.patient.organizationId, "prescriptions");
+  const created = await db.transaction(async (tx) => {
+    const allowed = await consumeMonthlyUsage(tx, userId, visible.patient.organizationId, "prescriptions", limit);
+    if (!allowed) return null;
+    const [record] = await tx.insert(prescriptions).values({
+      patientId: visible.patient.id,
+      consultationId: body.data.consultationId ?? null,
+      professionalId: userId,
+      organizationId: visible.patient.organizationId,
+      issuedAt,
+      prescriptionData: body.data.prescriptionData,
+      professionalSnapshot: body.data.professionalSnapshot,
+    }).returning();
+    return record;
+  });
+  if (!created) return res.status(403).json({ error: "Plan limit reached", feature: "prescriptions", limit });
   return res.status(201).json(created);
 });
 
